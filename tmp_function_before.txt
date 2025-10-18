@@ -1,0 +1,444 @@
+  Widget _buildPostActions(Post post) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              IconButton(
+                icon: Icon(
+                  post.isLiked ? Icons.favorite : Icons.favorite_border,
+                  color: post.isLiked ? Colors.red : Colors.white,
+                ),
+                onPressed: () {
+                  final currentUserId = context.read<AuthProvider>().currentUser?.id;
+                  if (currentUserId != null) {
+                    context.read<PostsProvider>().likePost(post.id, currentUserId);
+                  }
+                },
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 22),
+                onPressed: () {
+                  // Could scroll to bottom or focus input
+                },
+              ),
+              const SizedBox(width: 8),
+              // Dislike
+              IconButton(
+                icon: Text('Ã°Å¸â€˜Å½', style: TextStyle(fontSize: 20, color: post.userReaction == 'Ã°Å¸â€˜Å½' ? Colors.blue.shade300 : Colors.white70)),
+                onPressed: () async {
+                  final uid = context.read<AuthProvider>().currentUser?.id;
+                  if (uid == null) return;
+                  final current = post.userReaction;
+                  final next = current == 'Ã°Å¸â€˜Å½' ? null : 'Ã°Å¸â€˜Å½';
+                  await context.read<PostsProvider>().setReaction(postId: post.id, userId: uid, emoji: next);
+                  // Mirror to comments like on feed
+                  final user = context.read<AuthProvider>().currentUser;
+                  if (user != null) {
+                    if (next != null) {
+                      await context.read<PostsProvider>().addComment(
+                        postId: post.id,
+                        userId: user.id,
+                        content: 'Ã°Å¸â€˜Å½',
+                        userDisplayName: user.displayName,
+                        username: user.username,
+                        userProfileImageUrl: user.profileImageUrl,
+                        isUserVerified: user.isVerified,
+                      );
+                    } else {
+                      await context.read<PostsProvider>().deleteEmojiComment(postId: post.id, userId: user.id, emoji: 'Ã°Å¸â€˜Å½');
+                    }
+                  }
+                },
+              ),
+              const SizedBox(width: 8),
+              // Emoji Picker
+              IconButton(
+                icon: const Icon(Icons.emoji_emotions_outlined, color: Colors.grey),
+                onPressed: () => _showReactionPicker(post),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: Icon(
+                  post.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  color: post.isBookmarked ? Colors.blue : Colors.grey,
+                ),
+                onPressed: () {
+                  final currentUserId = context.read<AuthProvider>().currentUser?.id;
+                  if (currentUserId != null) {
+                    context.read<PostsProvider>().bookmarkPost(post.id, currentUserId);
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+        if (post.reactionCounts.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: post.reactionCounts.entries
+                  .where((e) => (e.value) > 0)
+                  .map((e) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2A2A2A),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text('${e.key} ${e.value}', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                      ))
+                  .toList(),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _showReactionPicker(Post post) {
+    final emojis = ['Ã¢ÂÂ¤Ã¯Â¸Â', 'Ã°Å¸â€˜Â', 'Ã°Å¸â€˜Å½', 'Ã°Å¸Ëœâ€š', 'Ã°Å¸ËœÂ®', 'Ã°Å¸ËœÂ¢', 'Ã°Å¸â€Â¥'];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: emojis.map((e) {
+            final selected = post.userReaction == e;
+            return GestureDetector(
+              onTap: () async {
+                final uid = Provider.of<AuthProvider>(ctx, listen: false).currentUser?.id;
+                if (uid == null) return;
+                final next = selected ? null : e;
+                await Provider.of<PostsProvider>(ctx, listen: false).setReaction(postId: post.id, userId: uid, emoji: next);
+                if (Navigator.canPop(ctx)) Navigator.pop(ctx);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: selected ? const Color(0xFF6C5CE7).withOpacity(0.15) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(e, style: const TextStyle(fontSize: 24)),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+
+
+  Widget _buildCommentTile(Comment comment) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _CommentAuthorAvatar(
+            userId: comment.userId,
+            fallbackImageUrl: comment.userProfileImageUrl,
+            displayName: comment.userDisplayName,
+            radius: 16,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: GestureDetector(
+              onLongPress: () {
+                Clipboard.setData(ClipboardData(text: comment.content));
+                
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A1A),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF2C2C2C)),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            comment.userDisplayName,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        if (comment.isUserVerified) ...[
+                          const SizedBox(width: 4),
+                          const Icon(Icons.verified, color: Colors.blue, size: 14),
+                        ],
+                        const SizedBox(width: 6),
+                        Text(
+                          '@${comment.username}',
+                          style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _formatTimestamp(comment.createdAt),
+                          style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      comment.content,
+                      style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.35),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                          color: comment.isLiked ? Colors.redAccent : Colors.grey,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${comment.likesCount}',
+                          style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                        ),
+                        const SizedBox(width: 16),
+                        Text(
+                          'Reply',
+                          style: TextStyle(color: Colors.grey.shade500, fontSize: 12, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCommentInput(user) {
+    if (user == null) return const SizedBox.shrink();
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        color: Color(0xFF1E1E1E),
+        border: Border(
+          top: BorderSide(color: Color(0xFF333333)),
+        ),
+      ),
+      child: Row(
+        children: [
+          UserAvatar(
+            imageUrl: user.profileImageUrl,
+            displayName: user.displayName,
+            radius: 16,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: _commentController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: (_replyToCommentId != null ? 'Replying to: ' + (_replyToDisplay ?? '') + ' â€” ' : '') + 'Write a comment...',
+                hintStyle: const TextStyle(color: Colors.grey),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: const BorderSide(color: Color(0xFF333333)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: const BorderSide(color: Color(0xFF333333)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: const BorderSide(color: Colors.blue),
+                ),
+                filled: true,
+                fillColor: const Color(0xFF2A2A2A),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+              ),
+              maxLines: null,
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(
+              Icons.send,
+              color: Colors.blue,
+            ),
+            onPressed: () { _postComment(); },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _postComment() async {
+    final content = _commentController.text.trim();
+    if (content.isEmpty) return;
+
+    final user = context.read<AuthProvider>().currentUser;
+    if (user == null) return;
+
+    try {
+      await context.read<PostsProvider>().addComment(
+        postId: widget.postId,
+        userId: user.id,
+        content: content,
+        userDisplayName: user.displayName,
+        username: user.username,
+        userProfileImageUrl: user.profileImageUrl,
+        isUserVerified: user.isVerified,
+      );
+      
+      _commentController.clear();
+      
+      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Comment posted!'), duration: Duration(seconds: 1), backgroundColor: Colors.green)); } _replyToCommentId = null; _replyToDisplay = null;
+    } catch (e) {
+      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Comment posted!'), duration: Duration(seconds: 1), backgroundColor: Colors.green)); } _replyToCommentId = null; _replyToDisplay = null;
+    }
+  }
+
+  String _formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+}
+
+class _PostAuthorAvatarDetail extends StatefulWidget {
+  final String userId;
+  final String? fallbackImageUrl;
+  final String displayName;
+  final double radius;
+
+  const _PostAuthorAvatarDetail({
+    Key? key,
+    required this.userId,
+    required this.displayName,
+    this.fallbackImageUrl,
+    this.radius = 25,
+  }) : super(key: key);
+
+  @override
+  State<_PostAuthorAvatarDetail> createState() => _PostAuthorAvatarDetailState();
+}
+
+class _PostAuthorAvatarDetailState extends State<_PostAuthorAvatarDetail> {
+  String? _imageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _imageUrl = widget.fallbackImageUrl;
+    if (_imageUrl == null || _imageUrl!.isEmpty) {
+      _loadUserImage();
+    }
+  }
+
+  Future<void> _loadUserImage() async {
+    try {
+      final user = await context.read<UserProvider>().getUserById(widget.userId);
+      if (!mounted) return;
+      setState(() {
+        _imageUrl = user?.profileImageUrl;
+      });
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return UserAvatar(
+      imageUrl: _imageUrl,
+      displayName: widget.displayName,
+      radius: widget.radius,
+    );
+  }
+}
+
+class _CommentAuthorAvatar extends StatefulWidget {
+  final String userId;
+  final String? fallbackImageUrl;
+  final String displayName;
+  final double radius;
+
+  const _CommentAuthorAvatar({
+    Key? key,
+    required this.userId,
+    required this.displayName,
+    this.fallbackImageUrl,
+    this.radius = 16,
+  }) : super(key: key);
+
+  @override
+  State<_CommentAuthorAvatar> createState() => _CommentAuthorAvatarState();
+}
+
+class _CommentAuthorAvatarState extends State<_CommentAuthorAvatar> {
+  String? _imageUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _imageUrl = widget.fallbackImageUrl;
+    if (_imageUrl == null || _imageUrl!.isEmpty) {
+      _loadUserImage();
+    }
+  }
+
+  Future<void> _loadUserImage() async {
+    try {
+      final user = await context.read<UserProvider>().getUserById(widget.userId);
+      if (!mounted) return;
+      setState(() {
+        _imageUrl = user?.profileImageUrl;
+      });
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return UserAvatar(
+      imageUrl: _imageUrl,
+      displayName: widget.displayName,
+      radius: widget.radius,
+    );
+  }
+}
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,79 @@
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              IconButton(
+                onPressed: () {
+                  final uid = context.read<AuthProvider>().currentUser?.id;
+                  if (uid != null) context.read<PostsProvider>().likePost(post.id, uid);
+                },
+                icon: Icon(
+                  post.isLiked ? Icons.favorite : Icons.favorite_border,
+                  color: post.isLiked ? Colors.red : Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: () async {
+                  final uid = context.read<AuthProvider>().currentUser?.id;
+                  if (uid == null) return;
+                  final next = post.userReaction == _dislikeEmoji ? null : _dislikeEmoji;
+                  await context.read<PostsProvider>().setReaction(postId: post.id, userId: uid, emoji: next);
+                },
+                icon: Icon(
+                  post.userReaction == _dislikeEmoji ? Icons.thumb_down_alt : Icons.thumb_down_alt_outlined,
+                  color: post.userReaction == _dislikeEmoji ? Colors.amber : Colors.white,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: () => _showReactionPicker(post),
+                icon: const Icon(Icons.emoji_emotions_outlined, color: Colors.white, size: 22),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () {
+                  final uid = context.read<AuthProvider>().currentUser?.id;
+                  if (uid != null) context.read<PostsProvider>().bookmarkPost(post.id, uid);
+                },
+                icon: Icon(
+                  post.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  color: post.isBookmarked ? const Color(0xFF6C5CE7) : Colors.white,
+                  size: 22,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (post.reactionCounts.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: post.reactionCounts.entries
+                  .where((e) => (e.value) > 0)
+                  .map((e) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2A2A2A),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text('${e.key} ${e.value}', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                      ))
+                  .toList(),
+            ),
+          ),
+      ],
+    );
+  }
