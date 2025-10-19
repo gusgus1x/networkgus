@@ -16,6 +16,10 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isSignUp = false;
   final _displayNameController = TextEditingController();
   final _usernameController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  bool _passwordObscured = true;
+  bool _confirmPasswordObscured = true;
 
   @override
   void dispose() {
@@ -23,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     _displayNameController.dispose();
     _usernameController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -191,35 +196,45 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 32),
 
                           // Sign up fields
-                          if (_isSignUp) ...[
-                            _buildTextField(
-                              controller: _displayNameController,
-                              label: 'Full Name',
-                              icon: Icons.person_outline,
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Please enter your full name';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            _buildTextField(
-                              controller: _usernameController,
-                              label: 'Username',
-                              icon: Icons.alternate_email,
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Please enter a username';
-                                }
-                                if (value.contains(' ')) {
-                                  return 'Username cannot contain spaces';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                          ],
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            switchInCurve: Curves.easeOut,
+                            switchOutCurve: Curves.easeIn,
+                            child: !_isSignUp
+                                ? const SizedBox.shrink()
+                                : Column(
+                                    key: const ValueKey('signup-extra-fields'),
+                                    children: [
+                                      _buildTextField(
+                                        controller: _displayNameController,
+                                        label: 'Full Name',
+                                        icon: Icons.person_outline,
+                                        validator: (value) {
+                                          if (value == null || value.trim().isEmpty) {
+                                            return 'Please enter your full name';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      const SizedBox(height: 16),
+                                      _buildTextField(
+                                        controller: _usernameController,
+                                        label: 'Username',
+                                        icon: Icons.alternate_email,
+                                        validator: (value) {
+                                          if (value == null || value.trim().isEmpty) {
+                                            return 'Please enter a username';
+                                          }
+                                          if (value.contains(' ')) {
+                                            return 'Username cannot contain spaces';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                  ),
+                          ),
 
                           // Email field
                           _buildTextField(
@@ -231,7 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               if (value == null || value.trim().isEmpty) {
                                 return 'Please enter your email';
                               }
-                              if (!value.contains('@')) {
+                              if (!RegExp(r"^[^@\s]+@[^@\s]+\.[^@\s]+").hasMatch(value)) {
                                 return 'Please enter a valid email';
                               }
                               return null;
@@ -244,7 +259,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             controller: _passwordController,
                             label: 'Password',
                             icon: Icons.lock_outline,
-                            obscureText: true,
+                            obscureText: _passwordObscured,
+                            onToggleObscure: () => setState(() => _passwordObscured = !_passwordObscured),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your password';
@@ -255,7 +271,48 @@ class _LoginScreenState extends State<LoginScreen> {
                               return null;
                             },
                           ),
+
+                          // Confirm password when sign up
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            child: !_isSignUp
+                                ? const SizedBox(height: 0)
+                                : Column(
+                                    key: const ValueKey('confirm-password'),
+                                    children: [
+                                      const SizedBox(height: 16),
+                                      _buildTextField(
+                                        controller: _confirmPasswordController,
+                                        label: 'Confirm Password',
+                                        icon: Icons.lock_reset_outlined,
+                                        obscureText: _confirmPasswordObscured,
+                                        onToggleObscure: () => setState(() => _confirmPasswordObscured = !_confirmPasswordObscured),
+                                        validator: (value) {
+                                          if (_isSignUp) {
+                                            if (value == null || value.isEmpty) {
+                                              return 'Please confirm your password';
+                                            }
+                                            if (value != _passwordController.text) {
+                                              return 'Passwords do not match';
+                                            }
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                          ),
                           const SizedBox(height: 24),
+
+                          // Forgot password (login only)
+                          if (!_isSignUp)
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: _onForgotPassword,
+                                child: const Text('Forgot Password?'),
+                              ),
+                            ),
 
                           // Submit button
                           Consumer<AuthProvider>(
@@ -318,6 +375,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           _formKey.currentState?.reset();
                           _displayNameController.clear();
                           _usernameController.clear();
+                          _confirmPasswordController.clear();
+                          _passwordObscured = true;
+                          _confirmPasswordObscured = true;
                         });
                       },
                       child: RichText(
@@ -357,6 +417,7 @@ class _LoginScreenState extends State<LoginScreen> {
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
+    VoidCallback? onToggleObscure,
   }) {
     return TextFormField(
       controller: controller,
@@ -369,6 +430,15 @@ class _LoginScreenState extends State<LoginScreen> {
         labelText: label,
         labelStyle: TextStyle(color: Colors.grey.shade700),
         prefixIcon: Icon(icon, color: Colors.grey.shade600),
+        suffixIcon: onToggleObscure == null
+            ? null
+            : IconButton(
+                icon: Icon(
+                  obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  color: Colors.grey.shade600,
+                ),
+                onPressed: onToggleObscure,
+              ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -384,6 +454,28 @@ class _LoginScreenState extends State<LoginScreen> {
         filled: true,
         fillColor: Colors.grey.shade50,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+    );
+  }
+
+  Future<void> _onForgotPassword() async {
+    final email = _emailController.text.trim();
+    if (!RegExp(r"^[^@\s]+@[^@\s]+\.[^@\s]+").hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your email to reset password')),
+      );
+      return;
+    }
+
+    final ok = await context.read<AuthProvider>().sendPasswordReset(email);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok
+            ? 'Password reset email sent to $email'
+            : 'Failed to send reset email'),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
       ),
     );
   }

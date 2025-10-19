@@ -43,6 +43,10 @@ class ChatService {
           'lastActivity': FieldValue.serverTimestamp(),
           'lastMessageSenderId': '',
           'unreadCount': 0,
+          'unreadBy': {
+            userId1: 0,
+            userId2: 0,
+          },
           'isActive': true,
           'participantNames': {
             userId1: user1Name,
@@ -111,6 +115,9 @@ class ChatService {
         'lastActivity': FieldValue.serverTimestamp(),
         'lastMessageSenderId': '',
         'unreadCount': 0,
+        'unreadBy': {
+          for (final uid in participantIds) uid: 0,
+        },
         'isActive': true,
       };
 
@@ -202,8 +209,10 @@ class ChatService {
         },
         'lastActivity': FieldValue.serverTimestamp(),
         'lastMessageSenderId': senderId,
-        // Simple global unread counter (demo): increment and reset on read
+        // Keep a global counter for backward compatibility
         'unreadCount': FieldValue.increment(1),
+        // Per-user unread counter: increment for receiver only
+        'unreadBy.$receiverId': FieldValue.increment(1),
         'isActive': true,
       });
 
@@ -362,7 +371,15 @@ class ChatService {
               lastActivity: data['lastActivity'] is String 
                 ? DateTime.parse(data['lastActivity'])
                 : DateTime.now(),
-              unreadCount: data['unreadCount'] is int ? data['unreadCount'] as int : 0,
+              // Use per-user unread if available; fallback to global int
+              unreadCount: (() {
+                final u = data['unreadBy'];
+                if (u is Map<String, dynamic>) {
+                  final v = u[userId];
+                  if (v is int) return v;
+                }
+                return data['unreadCount'] is int ? data['unreadCount'] as int : 0;
+              })(),
               participantNames: Map<String, String>.from(data['participantNames'] ?? {}),
               participantAvatars: Map<String, String?>.from(data['participantAvatars'] ?? {}),
               lastMessage: lastMsg,
@@ -397,9 +414,11 @@ class ChatService {
         }
       }
 
-      // Reset global unread count (demo)
+      // Set this user's unread counter to 0 (per-user)
       final DocumentReference conversationRef = _conversationsCollection.doc(conversationId);
-      batch.update(conversationRef, {'unreadCount': 0});
+      batch.update(conversationRef, {
+        'unreadBy.$userId': 0,
+      });
 
       await batch.commit();
     } catch (e) {
@@ -421,20 +440,25 @@ class ChatService {
           .get();
 
       if (lastMessageQuery.docs.isNotEmpty) {
-        final Message lastMessage = Message.fromJson(
-          lastMessageQuery.docs.first.data() as Map<String, dynamic>
-        );
+        final Map<String, dynamic> data = lastMessageQuery.docs.first.data() as Map<String, dynamic>;
+        // Normalize timestamp to string for Message model
+        if (data['timestamp'] is Timestamp) {
+          data['timestamp'] = (data['timestamp'] as Timestamp).toDate().toIso8601String();
+        } else if (data['timestamp'] == null) {
+          data['timestamp'] = DateTime.now().toIso8601String();
+        }
+        final Message lastMessage = Message.fromJson(data);
 
         await _conversationsCollection.doc(conversationId).update({
-          'lastMessage': lastMessage.content,
-          'lastMessageTime': Timestamp.fromDate(lastMessage.timestamp),
+          'lastMessage': lastMessage.toJson(),
+          'lastActivity': Timestamp.fromDate(lastMessage.timestamp),
           'lastMessageSenderId': lastMessage.senderId,
         });
       } else {
         // No messages left, set empty values
         await _conversationsCollection.doc(conversationId).update({
-          'lastMessage': '',
-          'lastMessageTime': FieldValue.serverTimestamp(),
+          'lastMessage': null,
+          'lastActivity': FieldValue.serverTimestamp(),
           'lastMessageSenderId': '',
         });
       }
@@ -468,23 +492,58 @@ class ChatService {
   // Search conversations
   Future<List<Conversation>> searchConversations(String userId, String query) async {
     try {
-      // Get user's conversations first
+      // Get user's conversations using correct field name
       final QuerySnapshot conversationsQuery = await _conversationsCollection
-          .where('participants', arrayContains: userId)
+          .where('participantIds', arrayContains: userId)
           .where('isActive', isEqualTo: true)
           .get();
 
-      final List<Conversation> conversations = conversationsQuery.docs
-          .map((doc) => Conversation.fromJson(doc.data() as Map<String, dynamic>))
-          .toList();
+      final List<Conversation> conversations = conversationsQuery.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        // Normalize lastActivity
+        if (data['lastActivity'] is Timestamp) {
+          data['lastActivity'] = (data['lastActivity'] as Timestamp).toDate().toIso8601String();
+        } else if (data['lastActivity'] == null) {
+          data['lastActivity'] = DateTime.now().toIso8601String();
+        }
 
-      // Filter conversations that contain the query in last message
-      final List<Conversation> filteredConversations = conversations
-          .where((conversation) => 
-              conversation.lastMessage?.content.toLowerCase().contains(query.toLowerCase()) ?? false)
-          .toList();
+        // Normalize lastMessage timestamp if map
+        Message? lastMsg;
+        final lm = data['lastMessage'];
+        if (lm is Map<String, dynamic>) {
+          final lmMap = Map<String, dynamic>.from(lm);
+          final ts = lmMap['timestamp'];
+          if (ts is Timestamp) {
+            lmMap['timestamp'] = ts.toDate().toIso8601String();
+          } else if (ts is! String) {
+            lmMap['timestamp'] = DateTime.now().toIso8601String();
+          }
+          lastMsg = Message.fromJson(lmMap);
+        }
 
-      return filteredConversations;
+        return Conversation(
+          id: data['id'] ?? doc.id,
+          participantIds: List<String>.from(data['participantIds'] ?? []),
+          name: (data['name'] as String?) ?? '',
+          imageUrl: data['imageUrl'] as String?,
+          type: ((data['type'] as String?) ?? 'direct') == 'group'
+              ? ConversationType.group
+              : ConversationType.direct,
+          lastMessage: lastMsg,
+          lastActivity: DateTime.parse(data['lastActivity'] as String),
+          unreadCount: data['unreadCount'] is int ? data['unreadCount'] as int : 0,
+          participantNames: Map<String, String>.from(data['participantNames'] ?? {}),
+          participantAvatars: Map<String, String?>.from(data['participantAvatars'] ?? {}),
+        );
+      }).toList();
+
+      // Filter by query against name or last message content
+      final q = query.toLowerCase();
+      return conversations.where((c) {
+        final name = c.name.toLowerCase();
+        final last = c.lastMessage?.content.toLowerCase() ?? '';
+        return name.contains(q) || last.contains(q);
+      }).toList();
     } catch (e) {
       print('Search conversations error: $e');
       throw Exception('Failed to search conversations');
@@ -495,15 +554,24 @@ class ChatService {
   Future<int> getUnreadMessagesCount(String userId) async {
     try {
       final QuerySnapshot conversationsQuery = await _conversationsCollection
-          .where('participants', arrayContains: userId)
+          .where('participantIds', arrayContains: userId)
           .where('isActive', isEqualTo: true)
           .get();
 
       int totalUnreadCount = 0;
       for (var doc in conversationsQuery.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        final Map<String, dynamic> unreadCount = data['unreadCount'] ?? {};
-        totalUnreadCount += (unreadCount[userId] as int?) ?? 0;
+        final u = data['unreadBy'];
+        if (u is Map<String, dynamic>) {
+          final v = u[userId];
+          if (v is int) {
+            totalUnreadCount += v;
+            continue;
+          }
+        }
+        // Fallback to global int if per-user map is absent
+        final int unread = (data['unreadCount'] is int) ? data['unreadCount'] as int : 0;
+        totalUnreadCount += unread;
       }
 
       return totalUnreadCount;

@@ -112,6 +112,17 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Send password reset email
+  Future<bool> sendPasswordReset(String email) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+      return true;
+    } catch (e) {
+      print('Password reset error: $e');
+      return false;
+    }
+  }
+
   Future<void> updateProfile({
     String? displayName,
     String? bio,

@@ -69,20 +69,38 @@ class ChatProvider with ChangeNotifier {
       _messageSubscriptions[conversationId] = _chatService.getMessages(conversationId).listen(
         (messages) {
           print('ChatProvider: Received ${messages.length} messages for conversation: $conversationId');
-          
-          // Get current messages and separate temporary ones (those with timestamp-based IDs)
+
+          // Current list may contain temporary messages (local optimistic ones)
           final currentMessages = _messages[conversationId] ?? [];
-          final tempMessages = currentMessages.where((msg) => 
-            msg.id.length > 10 && int.tryParse(msg.id) != null
-          ).toList();
-          
-          // Combine Firebase messages with temporary messages
-          final allMessages = [...messages.reversed.toList(), ...tempMessages];
-          
-          // Sort by timestamp to maintain order
-          allMessages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-          
-          _messages[conversationId] = allMessages;
+          final tempMessages = currentMessages.where((msg) =>
+              msg.id.length > 10 && int.tryParse(msg.id) != null).toList();
+
+          // Filter out temp messages that already exist on server (same sender, type, content, image, close timestamp)
+          bool _matches(Message a, Message b) {
+            final aImg = a.metadata != null ? a.metadata!['imageUrl'] as String? : null;
+            final bImg = b.metadata != null ? b.metadata!['imageUrl'] as String? : null;
+            final sameCore = a.senderId == b.senderId && a.type == b.type && a.content == b.content && aImg == bImg;
+            final closeTime = (a.timestamp.difference(b.timestamp)).abs() <= const Duration(seconds: 15);
+            return sameCore && closeTime;
+          }
+          final filteredTemps = tempMessages.where((t) => !messages.any((m) => _matches(t, m))).toList();
+
+          // Combine Firebase messages (authoritative) with any remaining temps
+          final combined = [...messages, ...filteredTemps];
+
+          // Sort by timestamp asc
+          combined.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+          // Deduplicate by message id (keep first occurrence in chronological order)
+          final seen = <String>{};
+          final deduped = <Message>[];
+          for (final m in combined) {
+            if (seen.add(m.id)) {
+              deduped.add(m);
+            }
+          }
+
+          _messages[conversationId] = deduped;
           notifyListeners();
         },
         onError: (error) {
@@ -190,11 +208,9 @@ class ChatProvider with ChangeNotifier {
           notifyListeners();
         }
       } catch (_) {}
-
-      // Remove the temporary message after successful send
-      // The real message will come through the Firebase stream
-      _messages[conversationId]?.removeWhere((msg) => msg.id == tempMessage.id);
-      notifyListeners();
+      // Do NOT remove the temporary message immediately.
+      // It will be automatically hidden when the server message arrives via stream (see dedupe logic).
+      // This avoids a brief flicker where the message disappears before the snapshot update.
       
     } catch (e) {
       // Remove the temporary message if sending failed
@@ -301,13 +317,7 @@ class ChatProvider with ChangeNotifier {
   }
 
   int get totalUnreadCount {
-    return _conversations.fold(0, (total, conversation) {
-      final lastSender = conversation.lastMessage?.senderId;
-      final count = (lastSender != null && lastSender == _currentUserId)
-          ? 0
-          : conversation.unreadCount;
-      return total + count;
-    });
+    return _conversations.fold(0, (total, conversation) => total + conversation.unreadCount);
   }
 
   // Delete entire conversation and its messages

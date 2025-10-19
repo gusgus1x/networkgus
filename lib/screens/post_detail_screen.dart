@@ -387,9 +387,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
         color: Color(0xFF1E1E1E),
-        border: Border(
-          top: BorderSide(color: Color(0xFF333333)),
-        ),
+        // Removed top border line for a cleaner look
       ),
       child: Row(
         children: [
@@ -582,4 +580,3 @@ class _CommentAuthorAvatarState extends State<_CommentAuthorAvatar> {
     );
   }
 }
-

@@ -1,0 +1,262 @@
+    }
+  }
+
+  // Edit post content and optionally images/video
+  Future<void> editPost({
+    required String postId,
+    String? newContent,
+    List<String>? newImageUrls,
+    String? newVideoUrl,
+  }) async {
+    // Find post index in main list
+    final idx = _posts.indexWhere((p) => p.id == postId);
+    Post? original;
+    if (idx != -1) original = _posts[idx];
+
+    // Optimistic UI update
+    if (idx != -1) {
+      _posts[idx] = _posts[idx].copyWith(
+        content: newContent ?? _posts[idx].content,
+        imageUrls: newImageUrls ?? _posts[idx].imageUrls,
+        videoUrl: newVideoUrl ?? _posts[idx].videoUrl,
+        updatedAt: DateTime.now(),
+      );
+      notifyListeners();
+    }
+    // Also update in groupPosts list if present
+    final gIdx = _groupPosts.indexWhere((p) => p.id == postId);
+    Post? originalGroup;
+    if (gIdx != -1) {
+      originalGroup = _groupPosts[gIdx];
+      _groupPosts[gIdx] = _groupPosts[gIdx].copyWith(
+        content: newContent ?? _groupPosts[gIdx].content,
+        imageUrls: newImageUrls ?? _groupPosts[gIdx].imageUrls,
+        videoUrl: newVideoUrl ?? _groupPosts[gIdx].videoUrl,
+        updatedAt: DateTime.now(),
+      );
+      notifyListeners();
+    }
+
+    try {
+      await _postService.updatePost(
+        postId: postId,
+        content: newContent,
+        imageUrls: newImageUrls,
+        videoUrl: newVideoUrl,
+      );
+    } catch (e) {
+      // Revert on error
+      if (idx != -1 && original != null) _posts[idx] = original;
+      if (gIdx != -1 && originalGroup != null) _groupPosts[gIdx] = originalGroup;
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  // Start listening to comments stream for real-time updates
+  void startListeningToComments(String postId) {
+    print('PostsProvider: Starting comments stream for post: $postId');
+    
+    // Cancel existing subscription for this post
+    _commentSubscriptions[postId]?.cancel();
+    
+    _commentsLoading[postId] = true;
+    notifyListeners();
+    
+    try {
+      _commentSubscriptions[postId] = _postService.getPostCommentsStream(postId).listen(
+        (comments) {
+          print('PostsProvider: Received ${comments.length} comments from stream for post: $postId');
+          _postComments[postId] = comments;
+          _commentsLoading[postId] = false;
+          notifyListeners();
+        },
+        onError: (error) {
+          print('PostsProvider: Error in comments stream for post $postId: $error');
+          _commentsLoading[postId] = false;
+          notifyListeners();
+        },
+      );
+    } catch (e) {
+      print('PostsProvider: Error starting comments stream for post $postId: $e');
+      _commentsLoading[postId] = false;
+      notifyListeners();
+    }
+  }
+
+  // Stop listening to comments stream for a specific post
+  void stopListeningToComments(String postId) {
+    print('PostsProvider: Stopping comments stream for post: $postId');
+    _commentSubscriptions[postId]?.cancel();
+    _commentSubscriptions.remove(postId);
+  }
+
+  // Comment functionality (legacy method for compatibility)
+  Future<void> loadCommentsForPost(String postId) async {
+    print('PostsProvider: Loading comments for post: $postId');
+    if (_commentsLoading[postId] == true) {
+      print('PostsProvider: Already loading comments for post: $postId');
+      return;
+    }
+
+    _commentsLoading[postId] = true;
+    notifyListeners();
+
+    try {
+      final comments = await _postService.getPostComments(postId);
+      print('PostsProvider: Loaded ${comments.length} comments for post: $postId');
+      _postComments[postId] = comments;
+    } catch (e) {
+      print('Error loading comments: $e');
+      _postComments[postId] = [];
+    }
+
+    _commentsLoading[postId] = false;
+    notifyListeners();
+  }
+
+  Future<void> addComment({
+    required String postId,
+    required String userId,
+    required String content,
+    required String userDisplayName,
+    required String username,
+    String? userProfileImageUrl,
+    bool isUserVerified = false,
+    String? replyToCommentId,
+  }) async {
+    try {
+      final commentId = await _postService.addComment(
+        postId: postId,
+        userId: userId,
+        content: content,
+        userDisplayName: userDisplayName,
+        username: username,
+        userProfileImageUrl: userProfileImageUrl,
+        isUserVerified: isUserVerified,
+        replyToCommentId: replyToCommentId,
+      );
+
+      // Update local state
+      if (replyToCommentId == null || replyToCommentId.isEmpty) {
+        final newComment = Comment(
+          id: commentId,
+          postId: postId,
+          userId: userId,
+          content: content,
+          createdAt: DateTime.now(),
+          userDisplayName: userDisplayName,
+          username: username,
+          userProfileImageUrl: userProfileImageUrl,
+          isUserVerified: isUserVerified,
+        );
+        _postComments[postId] ??= [];
+        _postComments[postId]!.add(newComment);
+      } else {
+        final list = _postComments[postId];
+        if (list != null) {
+          final idx = list.indexWhere((c) => c.id == replyToCommentId);
+          if (idx != -1) {
+            final c = list[idx];
+            list[idx] = c.copyWith(repliesCount: c.repliesCount + 1);
+          }
+        }
+      }
+
+      notifyListeners();
+    } catch (e) {
+      print('Error adding comment: $e');
+      throw Exception('Failed to add comment');
+    }
+  }
+
+  Future<void> likeComment(String commentId, String postId) async {
+    // Find and update comment in local state
+    final comments = _postComments[postId];
+    if (comments != null) {
+      final commentIndex = comments.indexWhere((c) => c.id == commentId);
+      if (commentIndex != -1) {
+        final comment = comments[commentIndex];
+        comments[commentIndex] = comment.copyWith(
+          isLiked: !comment.isLiked,
+          likesCount: comment.isLiked ? comment.likesCount - 1 : comment.likesCount + 1,
+        );
+        notifyListeners();
+      }
+    }
+
+    // TODO: Implement actual API call when comment liking is added to PostService
+  }
+
+  void clearCommentsForPost(String postId) {
+    _postComments.remove(postId);
+    _commentsLoading.remove(postId);
+    stopListeningToComments(postId);
+    notifyListeners();
+  }
+
+  // Get posts by user ID
+  Future<List<Post>> getUserPosts(String userId) async {
+    try {
+      return await _postService.getUserPosts(userId);
+    } catch (e) {
+      print('PostsProvider: Error getting user posts: $e');
+      throw Exception('Failed to get user posts');
+    }
+  }
+
+  final Map<String, List<Comment>> _replies = {};
+  List<Comment> getRepliesFor(String parentCommentId) => _replies[parentCommentId] ?? [];
+
+  Future<void> loadReplies(String postId, String parentCommentId) async {
+    try {
+      final list = await _postService.getReplies(postId, parentCommentId);
+      _replies[parentCommentId] = list;
+      notifyListeners();
+    } catch (e) {
+      _replies[parentCommentId] = [];
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    // Cancel all subscriptions
+    _postsSubscription?.cancel();
+    for (var subscription in _commentSubscriptions.values) {
+      subscription?.cancel();
+    }
+    _commentSubscriptions.clear();
+    super.dispose();
+  }
+
+  Future<void> deleteEmojiComment({
+    required String postId,
+    required String userId,
+    required String emoji,
+  }) async {
+    try {
+      final list = _postComments[postId];
+      if (list != null) {
+        final idx = list.lastIndexWhere((c) => c.userId == userId && c.content == emoji);
+        if (idx != -1) {
+          list.removeAt(idx);
+        }
+      }
+
+      final pIdx = _posts.indexWhere((p) => p.id == postId);
+      if (pIdx != -1) {
+        final p = _posts[pIdx];
+        if (p.commentsCount > 0) {
+          _posts[pIdx] = p.copyWith(commentsCount: p.commentsCount - 1);
+        }
+      }
+      notifyListeners();
+
+      await _postService.deleteEmojiComment(postId: postId, userId: userId, emoji: emoji);
+    } catch (e) {
+      // Non-fatal
+    }
+  }
+}
+

@@ -6,6 +6,8 @@ class MessageBubble extends StatelessWidget {
   final Message message;
   final bool isMe;
   final bool showAvatar;
+  // When true, renders sender name header above bubble (useful for groups)
+  final bool showSenderName;
   final String senderName;
   final String? senderImageUrl;
 
@@ -14,6 +16,7 @@ class MessageBubble extends StatelessWidget {
     required this.message,
     required this.isMe,
     this.showAvatar = true,
+    this.showSenderName = false,
     required this.senderName,
     this.senderImageUrl,
   }) : super(key: key);
@@ -71,7 +74,8 @@ class MessageBubble extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (!isMe && showAvatar && message.conversationId.contains('conv_3'))
+                  // Show sender name for group chats when avatar boundary is shown
+                  if (!isMe && showAvatar && showSenderName)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                   child: Text(senderName, style: TextStyle(color: theme.colorScheme.primary, fontSize: 12, fontWeight: FontWeight.bold)),

@@ -122,6 +122,7 @@ class _ConversationTileState extends State<ConversationTile> {
     final displayName = _displayName ?? 'Loading...';
     final displayImage = _displayImage;
     final lastMessage = widget.conversation.lastMessage;
+    final isOwnLastMessage = lastMessage?.senderId == widget.currentUserId;
     
     final theme = Theme.of(context);
     return ListTile(
@@ -133,8 +134,7 @@ class _ConversationTileState extends State<ConversationTile> {
             displayName: displayName,
             radius: 28,
           ),
-          if (widget.conversation.unreadCount > 0 &&
-              (widget.conversation.lastMessage?.senderId != widget.currentUserId))
+          if (widget.conversation.unreadCount > 0)
             Positioned(
               right: 0,
               top: 0,
@@ -170,8 +170,7 @@ class _ConversationTileState extends State<ConversationTile> {
             child: Text(
               displayName,
               style: TextStyle(
-                fontWeight: (widget.conversation.unreadCount > 0 &&
-                        (widget.conversation.lastMessage?.senderId != widget.currentUserId))
+                fontWeight: (widget.conversation.unreadCount > 0)
                     ? FontWeight.bold
                     : FontWeight.normal,
                 fontSize: 16,
@@ -205,16 +204,19 @@ class _ConversationTileState extends State<ConversationTile> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    if (lastMessage.senderId == widget.currentUserId)
-                      Icon(
-                        lastMessage.isRead ? Icons.done_all : Icons.done,
-                        size: 16,
-                        color: lastMessage.isRead ? const Color(0xFF6C5CE7) : theme.hintColor,
+                    // For your own last message, prefix with "You:" instead of a tick icon
+                    if (isOwnLastMessage) ...[
+                      Text(
+                        'You: ',
+                        style: TextStyle(
+                          color: theme.hintColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    if (lastMessage.senderId == widget.currentUserId)
-                      const SizedBox(width: 4),
+                    ],
                     if (widget.conversation.type == ConversationType.group && 
-                        lastMessage.senderId != widget.currentUserId)
+                        !isOwnLastMessage)
                       Text(
                         '${_getSenderName(lastMessage.senderId)}: ',
                         style: TextStyle(
@@ -227,13 +229,11 @@ class _ConversationTileState extends State<ConversationTile> {
                       child: Text(
                         _getMessagePreview(lastMessage),
                         style: TextStyle(
-                          color: (widget.conversation.unreadCount > 0 &&
-                                  (widget.conversation.lastMessage?.senderId != widget.currentUserId))
+                          color: (widget.conversation.unreadCount > 0)
                               ? theme.textTheme.bodyLarge?.color
                               : theme.hintColor,
                           fontSize: 14,
-                          fontWeight: (widget.conversation.unreadCount > 0 &&
-                                  (widget.conversation.lastMessage?.senderId != widget.currentUserId))
+                          fontWeight: (widget.conversation.unreadCount > 0)
                               ? FontWeight.w500
                               : FontWeight.normal,
                         ),

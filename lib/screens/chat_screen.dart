@@ -262,6 +262,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           message: message,
                           isMe: isMe,
                           showAvatar: !isMe && _shouldShowAvatar(index, messages),
+                          showSenderName: (conversation?.type == ConversationType.group),
                           senderName: _getSenderName(message.senderId),
                           senderImageUrl: _getSenderAvatar(message.senderId),
                         ),
