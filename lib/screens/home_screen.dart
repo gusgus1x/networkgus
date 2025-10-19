@@ -232,13 +232,15 @@ class _HomeScreenState extends State<HomeScreen> {
           
           return Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
-              border: const Border(
-                top: BorderSide(color: Color(0xFF2D2D2D), width: 0.5),
+              color: Theme.of(context).bottomNavigationBarTheme.backgroundColor ?? Theme.of(context).cardColor,
+              border: Border(
+                top: BorderSide(color: Theme.of(context).dividerColor, width: 0.5),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? Colors.black.withOpacity(0.05)
+                      : Colors.black.withOpacity(0.3),
                   offset: const Offset(0, -2),
                   blurRadius: 8,
                 ),
@@ -247,8 +249,8 @@ class _HomeScreenState extends State<HomeScreen> {
             child: BottomNavigationBar(
               type: BottomNavigationBarType.fixed,
               backgroundColor: Colors.transparent,
-              selectedItemColor: const Color(0xFF6C5CE7),
-              unselectedItemColor: Colors.grey.shade500,
+              selectedItemColor: Theme.of(context).bottomNavigationBarTheme.selectedItemColor ?? const Color(0xFF6C5CE7),
+              unselectedItemColor: Theme.of(context).bottomNavigationBarTheme.unselectedItemColor ?? Colors.grey.shade600,
               elevation: 0,
             items: <BottomNavigationBarItem>[
               const BottomNavigationBarItem(

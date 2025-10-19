@@ -26,17 +26,17 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<User> _searchResults = [];
   List<User> _suggestedUsers = [];
+  List<User> _recentUsers = [];
   bool _isSearching = false;
-  bool _isLoadingSuggestions = true;
+  bool _isLoadingSuggestions = false; // Disable suggestions by default
+  bool _isLoadingRecents = false;
   DateTime _lastSearchTime = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    // Use post-frame callback to avoid setState during build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadSuggestedUsers();
-    });
+    // Suggestions disabled: do not auto-load suggested users
+    _loadRecentUsers();
   }
 
   @override
@@ -48,7 +48,16 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<void> _loadSuggestedUsers() async {
     try {
       final userProvider = context.read<UserProvider>();
-      final suggestions = await userProvider.getSuggestedUsers();
+      final auth = context.read<AuthProvider>();
+      final uid = auth.currentUser?.id;
+      if (uid == null) {
+        setState(() {
+          _suggestedUsers = [];
+          _isLoadingSuggestions = false;
+        });
+        return;
+      }
+      final suggestions = await userProvider.getSuggestedUsers(uid);
       if (mounted) {
         setState(() {
           _suggestedUsers = suggestions;
@@ -103,6 +112,37 @@ class _SearchScreenState extends State<SearchScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Search failed: $e')),
         );
+      }
+    }
+  }
+
+  Future<void> _loadRecentUsers() async {
+    try {
+      setState(() {
+        _isLoadingRecents = true;
+      });
+      final userProvider = context.read<UserProvider>();
+      final auth = context.read<AuthProvider>();
+      final uid = auth.currentUser?.id;
+      if (uid == null) {
+        setState(() {
+          _recentUsers = [];
+          _isLoadingRecents = false;
+        });
+        return;
+      }
+      final recents = await userProvider.getRecentSearches(uid, limit: 20);
+      if (mounted) {
+        setState(() {
+          _recentUsers = recents;
+          _isLoadingRecents = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingRecents = false;
+        });
       }
     }
   }
@@ -185,12 +225,12 @@ class _SearchScreenState extends State<SearchScreen> {
               },
             );
           } else {
-            // Show suggested users when not searching
-            if (_isLoadingSuggestions) {
+            // Show recent searches when not actively searching
+            if (_isLoadingRecents) {
               return const Center(child: CircularProgressIndicator());
             }
-            
-            if (_suggestedUsers.isEmpty) {
+
+            if (_recentUsers.isEmpty) {
               return const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -211,7 +251,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      'Find friends and discover new people.',
+                      'Your recent searches will appear here.',
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: 14,
@@ -223,25 +263,43 @@ class _SearchScreenState extends State<SearchScreen> {
               );
             }
 
+            final theme = Theme.of(context);
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Suggested for you',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'Recent searches',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () async {
+                          final uid = context.read<AuthProvider>().currentUser?.id;
+                          if (uid == null) return;
+                          await context.read<UserProvider>().clearRecentSearches(uid);
+                          await _loadRecentUsers();
+                        },
+                        child: Text(
+                          'Clear',
+                          style: TextStyle(color: theme.hintColor),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(
                   child: ListView.builder(
-                    itemCount: _suggestedUsers.length,
+                    itemCount: _recentUsers.length,
                     itemBuilder: (context, index) {
-                      final user = _suggestedUsers[index];
+                      final user = _recentUsers[index];
                       return _buildUserTile(user);
                     },
                   ),
@@ -379,12 +437,21 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  void _viewProfile(User user) {
-    Navigator.push(
+  void _viewProfile(User user) async {
+    final currentUser = context.read<AuthProvider>().currentUser;
+    if (currentUser != null && currentUser.id != user.id) {
+      // Save to recent searches
+      await context.read<UserProvider>().addRecentSearch(currentUser.id, user.id);
+    }
+
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => UserProfileScreen(userId: user.id),
       ),
     );
+
+    // Refresh recent list after returning
+    await _loadRecentUsers();
   }
 }

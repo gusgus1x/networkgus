@@ -11,8 +11,10 @@ class UserService {
       final mockUsers = [
         {
           'username': 'johndoe',
+          'usernameLower': 'johndoe',
           'email': 'john@example.com',
           'displayName': 'John Doe',
+          'displayNameLower': 'john doe',
           'profileImageUrl': null,
           'bio': 'Software developer from Bangkok',
           'followersCount': 125,
@@ -23,8 +25,10 @@ class UserService {
         },
         {
           'username': 'jansmith',
+          'usernameLower': 'jansmith',
           'email': 'jane@example.com',
           'displayName': 'Jane Smith',
+          'displayNameLower': 'jane smith',
           'profileImageUrl': null,
           'bio': 'UI/UX Designer who loves creating beautiful interfaces',
           'followersCount': 234,
@@ -35,8 +39,10 @@ class UserService {
         },
         {
           'username': 'alexcoder',
+          'usernameLower': 'alexcoder',
           'email': 'alex@example.com',
           'displayName': 'Alex Johnson',
+          'displayNameLower': 'alex johnson',
           'profileImageUrl': null,
           'bio': 'Full-stack developer and tech enthusiast',
           'followersCount': 89,
@@ -47,8 +53,10 @@ class UserService {
         },
         {
           'username': 'sarahdev',
+          'usernameLower': 'sarahdev',
           'email': 'sarah@example.com',
           'displayName': 'Sarah Wilson',
+          'displayNameLower': 'sarah wilson',
           'profileImageUrl': null,
           'bio': 'Mobile app developer specializing in Flutter',
           'followersCount': 167,
@@ -73,6 +81,131 @@ class UserService {
     }
   }
 
+  // Add or update a recent search entry for current user
+  Future<void> addRecentSearch(String currentUserId, String viewedUserId, {int keepLimit = 20}) async {
+    try {
+      if (currentUserId == viewedUserId) return;
+      final CollectionReference recentsCol = _firestore
+          .collection('users')
+          .doc(currentUserId)
+          .collection('recent_searches');
+
+      // Upsert viewed user with latest timestamp
+      await recentsCol.doc(viewedUserId).set({
+        'userId': viewedUserId,
+        'viewedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // Trim to keep only the newest keepLimit items
+      final QuerySnapshot q = await recentsCol
+          .orderBy('viewedAt', descending: true)
+          .get();
+      if (q.docs.length > keepLimit) {
+        final WriteBatch batch = _firestore.batch();
+        for (final doc in q.docs.skip(keepLimit)) {
+          batch.delete(doc.reference);
+        }
+        await batch.commit();
+      }
+    } catch (e) {
+      print('Add recent search error: $e');
+    }
+  }
+
+  // Get recent searches as full User objects (most recent first)
+  Future<List<User>> getRecentSearches(String currentUserId, {int limit = 20}) async {
+    try {
+      final recentsSnap = await _firestore
+          .collection('users')
+          .doc(currentUserId)
+          .collection('recent_searches')
+          .orderBy('viewedAt', descending: true)
+          .limit(limit)
+          .get();
+
+      final ids = recentsSnap.docs
+          .map((d) => (d.data() as Map<String, dynamic>)['userId'] as String)
+          .toList();
+
+      if (ids.isEmpty) return [];
+
+      final List<User> users = [];
+      // Firestore whereIn supports up to 10 items; chunk if necessary
+      for (var i = 0; i < ids.length; i += 10) {
+        final chunk = ids.sublist(i, i + 10 > ids.length ? ids.length : i + 10);
+        final q = await _usersCollection.where(FieldPath.documentId, whereIn: chunk).get();
+        for (var doc in q.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          data['id'] = doc.id;
+          users.add(User.fromMap(data));
+        }
+      }
+
+      // Preserve order by ids sequence (most recent first)
+      users.sort((a, b) => ids.indexOf(a.id).compareTo(ids.indexOf(b.id)));
+      return users;
+    } catch (e) {
+      print('Get recent searches error: $e');
+      return [];
+    }
+  }
+
+  // Clear all recent searches for current user
+  Future<void> clearRecentSearches(String currentUserId) async {
+    try {
+      final col = _firestore
+          .collection('users')
+          .doc(currentUserId)
+          .collection('recent_searches');
+      final q = await col.get();
+      if (q.docs.isEmpty) return;
+      final WriteBatch batch = _firestore.batch();
+      for (final d in q.docs) {
+        batch.delete(d.reference);
+      }
+      await batch.commit();
+    } catch (e) {
+      print('Clear recent searches error: $e');
+    }
+  }
+
+  // Delete previously seeded mock users (safe to call multiple times)
+  Future<int> deleteMockUsers() async {
+    try {
+      final mockIds = ['user1', 'user2', 'user3', 'user4'];
+      final mockUsernames = ['johndoe', 'jansmith', 'alexcoder', 'sarahdev'];
+
+      int deleted = 0;
+      final WriteBatch batch = _firestore.batch();
+
+      // Delete by known document IDs
+      for (final id in mockIds) {
+        final ref = _usersCollection.doc(id);
+        final snap = await ref.get();
+        if (snap.exists) {
+          batch.delete(ref);
+          deleted++;
+        }
+      }
+
+      // Also delete by usernames in case they were imported with different IDs
+      // Firestore whereIn max 10 items
+      final q = await _usersCollection.where('username', whereIn: mockUsernames).get();
+      for (final doc in q.docs) {
+        batch.delete(doc.reference);
+        deleted++;
+      }
+
+      if (deleted > 0) {
+        await batch.commit();
+      }
+      return deleted;
+    } catch (e) {
+      print('Delete mock users error: $e');
+      return 0;
+    }
+  }
+
   // Get user by ID
   Future<User?> getUserById(String userId) async {
     try {
@@ -92,13 +225,25 @@ class UserService {
   // Get user by username
   Future<User?> getUserByUsername(String username) async {
     try {
-      final QuerySnapshot query = await _usersCollection
-          .where('username', isEqualTo: username)
+      // Prefer normalized lookup
+      QuerySnapshot query = await _usersCollection
+          .where('usernameLower', isEqualTo: username.toLowerCase())
           .limit(1)
           .get();
-      
+
+      // Fallback to legacy field if needed
+      if (query.docs.isEmpty) {
+        query = await _usersCollection
+            .where('username', isEqualTo: username)
+            .limit(1)
+            .get();
+      }
+
       if (query.docs.isNotEmpty) {
-        return User.fromMap(query.docs.first.data() as Map<String, dynamic>);
+        final doc = query.docs.first;
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return User.fromMap(data);
       }
       return null;
     } catch (e) {
@@ -112,12 +257,21 @@ class UserService {
     try {
       final List<User> users = [];
       
-      // Search by username
-      final QuerySnapshot usernameQuery = await _usersCollection
-          .where('username', isGreaterThanOrEqualTo: query.toLowerCase())
-          .where('username', isLessThanOrEqualTo: '${query.toLowerCase()}\uf8ff')
+      // Search by username (normalized)
+      QuerySnapshot usernameQuery = await _usersCollection
+          .where('usernameLower', isGreaterThanOrEqualTo: query.toLowerCase())
+          .where('usernameLower', isLessThanOrEqualTo: '${query.toLowerCase()}\uf8ff')
           .limit(20)
           .get();
+
+      // Fallback to legacy field if index not present
+      if (usernameQuery.docs.isEmpty) {
+        usernameQuery = await _usersCollection
+            .where('username', isGreaterThanOrEqualTo: query)
+            .where('username', isLessThanOrEqualTo: '$query\uf8ff')
+            .limit(20)
+            .get();
+      }
 
       for (var doc in usernameQuery.docs) {
         try {
@@ -130,12 +284,21 @@ class UserService {
         }
       }
 
-      // Search by display name
-      final QuerySnapshot displayNameQuery = await _usersCollection
-          .where('displayName', isGreaterThanOrEqualTo: query)
-          .where('displayName', isLessThanOrEqualTo: '$query\uf8ff')
+      // Search by display name (normalized)
+      QuerySnapshot displayNameQuery = await _usersCollection
+          .where('displayNameLower', isGreaterThanOrEqualTo: query.toLowerCase())
+          .where('displayNameLower', isLessThanOrEqualTo: '${query.toLowerCase()}\uf8ff')
           .limit(20)
           .get();
+
+      // Fallback to legacy field if needed
+      if (displayNameQuery.docs.isEmpty) {
+        displayNameQuery = await _usersCollection
+            .where('displayName', isGreaterThanOrEqualTo: query)
+            .where('displayName', isLessThanOrEqualTo: '$query\uf8ff')
+            .limit(20)
+            .get();
+      }
 
       for (var doc in displayNameQuery.docs) {
         try {
@@ -325,6 +488,7 @@ class UserService {
       final Map<String, dynamic> updateData = {};
       
       if (displayName != null) updateData['displayName'] = displayName;
+      if (displayName != null) updateData['displayNameLower'] = displayName.toLowerCase();
       if (bio != null) updateData['bio'] = bio;
       if (profileImageUrl != null) updateData['profileImageUrl'] = profileImageUrl;
       if (website != null) updateData['website'] = website;
@@ -404,7 +568,9 @@ class UserService {
 
       final List<User> suggestedUsers = [];
       for (var doc in query.docs) {
-        final user = User.fromMap(doc.data() as Map<String, dynamic>);
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id; // ensure ID from document
+        final user = User.fromMap(data);
         
         // Check if current user is already following this user
         final bool isAlreadyFollowing = await isFollowing(currentUserId, user.id);

@@ -75,7 +75,10 @@ class AuthProvider with ChangeNotifier {
         );
 
         // Save to Firestore
-        await _firestore.collection('users').doc(userCredential.user!.uid).set(newUser.toMap());
+        final data = newUser.toMap();
+        data['usernameLower'] = username.toLowerCase();
+        data['displayNameLower'] = displayName.toLowerCase();
+        await _firestore.collection('users').doc(userCredential.user!.uid).set(data);
         
         _currentUser = newUser;
         _isLoggedIn = true;

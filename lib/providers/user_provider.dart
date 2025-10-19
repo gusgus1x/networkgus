@@ -53,33 +53,27 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<List<User>> getSuggestedUsers() async {
+  Future<List<User>> getSuggestedUsers(String currentUserId, {int limit = 10}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final suggestions = await _userService.getAllUsers();
-      
-      // If no users found, create mock users for testing
-      if (suggestions.isEmpty) {
-        print('No users found, creating mock users...');
-        await _userService.createMockUsers();
-        await Future.delayed(const Duration(seconds: 1)); // Wait for Firebase to sync
-        final newSuggestions = await _userService.getAllUsers();
-        _isLoading = false;
-        notifyListeners();
-        return newSuggestions.take(10).toList();
-      }
-      
+      // Only use real users from Firestore and exclude current user + already-following
+      final suggestions = await _userService.getSuggestedUsers(currentUserId, limit: limit);
       _isLoading = false;
       notifyListeners();
-      return suggestions.take(10).toList(); // Return top 10 users as suggestions
+      return suggestions;
     } catch (e) {
       print('UserProvider: Error getting suggested users: $e');
       _isLoading = false;
       notifyListeners();
       return [];
     }
+  }
+
+  Future<int> deleteMockUsers() async {
+    final n = await _userService.deleteMockUsers();
+    return n;
   }
 
   Future<bool> followUser(String currentUserId, String targetUserId) async {
@@ -128,6 +122,32 @@ class UserProvider with ChangeNotifier {
     } catch (e) {
       print('UserProvider: Error getting all users: $e');
       return [];
+    }
+  }
+
+  // Recent searches APIs
+  Future<void> addRecentSearch(String currentUserId, String viewedUserId) async {
+    try {
+      await _userService.addRecentSearch(currentUserId, viewedUserId);
+    } catch (e) {
+      print('UserProvider: Error adding recent search: $e');
+    }
+  }
+
+  Future<List<User>> getRecentSearches(String currentUserId, {int limit = 20}) async {
+    try {
+      return await _userService.getRecentSearches(currentUserId, limit: limit);
+    } catch (e) {
+      print('UserProvider: Error getting recent searches: $e');
+      return [];
+    }
+  }
+
+  Future<void> clearRecentSearches(String currentUserId) async {
+    try {
+      await _userService.clearRecentSearches(currentUserId);
+    } catch (e) {
+      print('UserProvider: Error clearing recent searches: $e');
     }
   }
 
