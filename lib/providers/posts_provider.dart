@@ -171,11 +171,11 @@ class PostsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchGroupPosts(String groupId) async {
+  Future<void> fetchGroupPosts(String groupId, {String? currentUserId}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      _groupPosts = await _postService.getGroupPosts(groupId);
+      _groupPosts = await _postService.getGroupPosts(groupId, currentUserId: currentUserId);
     } catch (e) {
       print('Error fetching group posts: $e');
       _groupPosts = [];
@@ -184,11 +184,11 @@ class PostsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchGroupPostsByPostIds(List<String> postIds) async {
+  Future<void> fetchGroupPostsByPostIds(List<String> postIds, {String? currentUserId}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      _groupPosts = await _postService.getPostsByIds(postIds);
+      _groupPosts = await _postService.getPostsByIds(postIds, currentUserId: currentUserId);
     } catch (e) {
       print('Error fetching group posts by IDs: $e');
       _groupPosts = [];
@@ -198,24 +198,25 @@ class PostsProvider with ChangeNotifier {
   }
 
   Future<void> createPost({
-  required String content,
-  required String userId,
-  required String userDisplayName,
-  required String username,
-  String? userProfileImageUrl,
-  bool isUserVerified = false,
-  List<String>? imageUrls,
-  List<File>? imageFiles,
-  File? videoFile,
-  String? videoUrl,
-  String? groupId,
-  bool refreshAfterCreate = true,
+    required String content,
+    required String userId,
+    required String userDisplayName,
+    required String username,
+    String? userProfileImageUrl,
+    bool isUserVerified = false,
+    List<String>? imageUrls,
+    List<File>? imageFiles,
+    File? videoFile,
+    String? videoUrl,
+    String? groupId,
+    bool refreshAfterCreate = true,
   }) async {
     _isLoading = true;
     notifyListeners();
 
     try {
       if (groupId != null && groupId.isNotEmpty) {
+        // Create post for group and then refresh that group's feed
         await _postService.createPostForGroup(
           userId: userId,
           content: content,
@@ -229,6 +230,9 @@ class PostsProvider with ChangeNotifier {
           videoUrl: videoUrl,
           groupId: groupId,
         );
+
+        // Immediately refresh group posts so the new post appears without leaving the page
+        await fetchGroupPosts(groupId);
       } else {
         await _postService.createPost(
           userId: userId,
@@ -246,7 +250,7 @@ class PostsProvider with ChangeNotifier {
       }
 
       // Refresh posts to show the new post (optional)
-      if (refreshAfterCreate) {
+      if (refreshAfterCreate && (groupId == null || groupId.isEmpty)) {
         await fetchPosts(refresh: true, currentUserId: userId);
       }
     } catch (e) {
@@ -258,18 +262,24 @@ class PostsProvider with ChangeNotifier {
   }
 
   Future<void> likePost(String postId, String userId) async {
-    final postIndex = _posts.indexWhere((post) => post.id == postId);
-    if (postIndex == -1) return;
+    final pIdx = _posts.indexWhere((p) => p.id == postId);
+    final gIdx = _groupPosts.indexWhere((p) => p.id == postId);
+    if (pIdx == -1 && gIdx == -1) return;
 
-    final post = _posts[postIndex];
-    final wasLiked = post.isLiked;
-    
-    // Update UI immediately
-    _posts[postIndex] = post.copyWith(
-      isLiked: !post.isLiked,
-      likesCount: post.isLiked ? post.likesCount - 1 : post.likesCount + 1,
-    );
-    
+    // Keep originals for revert
+    final originalP = pIdx != -1 ? _posts[pIdx] : null;
+    final originalG = gIdx != -1 ? _groupPosts[gIdx] : null;
+    final wasLiked = (originalP ?? originalG)!.isLiked;
+
+    // Optimistic updates for both lists
+    void applyLike(List<Post> list, int idx) {
+      list[idx] = list[idx].copyWith(
+        isLiked: !list[idx].isLiked,
+        likesCount: list[idx].isLiked ? list[idx].likesCount - 1 : list[idx].likesCount + 1,
+      );
+    }
+    if (pIdx != -1) applyLike(_posts, pIdx);
+    if (gIdx != -1) applyLike(_groupPosts, gIdx);
     notifyListeners();
 
     try {
@@ -279,25 +289,27 @@ class PostsProvider with ChangeNotifier {
         await _postService.likePost(postId, userId);
       }
     } catch (e) {
-      // Revert on error
-      _posts[postIndex] = post;
+      if (pIdx != -1 && originalP != null) _posts[pIdx] = originalP;
+      if (gIdx != -1 && originalG != null) _groupPosts[gIdx] = originalG;
       notifyListeners();
       print('Error liking post: $e');
     }
   }
 
   Future<void> bookmarkPost(String postId, String userId) async {
-    final postIndex = _posts.indexWhere((post) => post.id == postId);
-    if (postIndex == -1) return;
+    final pIdx = _posts.indexWhere((p) => p.id == postId);
+    final gIdx = _groupPosts.indexWhere((p) => p.id == postId);
+    if (pIdx == -1 && gIdx == -1) return;
 
-    final post = _posts[postIndex];
-    final wasBookmarked = post.isBookmarked;
-    
-    // Update UI immediately
-    _posts[postIndex] = post.copyWith(
-      isBookmarked: !post.isBookmarked,
-    );
-    
+    final originalP = pIdx != -1 ? _posts[pIdx] : null;
+    final originalG = gIdx != -1 ? _groupPosts[gIdx] : null;
+    final wasBookmarked = (originalP ?? originalG)!.isBookmarked;
+
+    void applyBookmark(List<Post> list, int idx) {
+      list[idx] = list[idx].copyWith(isBookmarked: !list[idx].isBookmarked);
+    }
+    if (pIdx != -1) applyBookmark(_posts, pIdx);
+    if (gIdx != -1) applyBookmark(_groupPosts, gIdx);
     notifyListeners();
 
     try {
@@ -307,24 +319,35 @@ class PostsProvider with ChangeNotifier {
         await _postService.bookmarkPost(postId, userId);
       }
     } catch (e) {
-      // Revert on error
-      _posts[postIndex] = post;
+      if (pIdx != -1 && originalP != null) _posts[pIdx] = originalP;
+      if (gIdx != -1 && originalG != null) _groupPosts[gIdx] = originalG;
       notifyListeners();
       print('Error bookmarking post: $e');
     }
   }
 
   Future<void> deletePost(String postId, String userId) async {
-    // Remove from UI immediately
-    final postToRemove = _posts.firstWhere((post) => post.id == postId);
-    _posts.removeWhere((post) => post.id == postId);
+    // Remove from UI immediately in both lists
+    Post? removedFromPosts;
+    Post? removedFromGroup;
+    final pIdx = _posts.indexWhere((p) => p.id == postId);
+    final gIdx = _groupPosts.indexWhere((p) => p.id == postId);
+    if (pIdx != -1) {
+      removedFromPosts = _posts[pIdx];
+      _posts.removeAt(pIdx);
+    }
+    if (gIdx != -1) {
+      removedFromGroup = _groupPosts[gIdx];
+      _groupPosts.removeAt(gIdx);
+    }
     notifyListeners();
 
     try {
       await _postService.deletePost(postId, userId);
     } catch (e) {
-      // Revert on error
-      _posts.add(postToRemove);
+      // Revert on error to their respective lists
+      if (removedFromPosts != null) _posts.add(removedFromPosts);
+      if (removedFromGroup != null) _groupPosts.add(removedFromGroup);
       notifyListeners();
       print('Error deleting post: $e');
     }
@@ -639,4 +662,3 @@ class PostsProvider with ChangeNotifier {
     }
   }
 }
-

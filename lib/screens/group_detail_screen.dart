@@ -31,12 +31,13 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final groupProvider = Provider.of<GroupProvider>(context, listen: false);
       final postsProvider = Provider.of<PostsProvider>(context, listen: false);
+      final currentUserId = Provider.of<AuthProvider>(context, listen: false).currentUser?.id;
       final refreshed = await groupProvider.getGroupById(_group.id);
       if (refreshed != null) {
         setState(() => _group = refreshed);
-        await postsProvider.fetchGroupPostsByPostIds(refreshed.postIds);
+        await postsProvider.fetchGroupPostsByPostIds(refreshed.postIds, currentUserId: currentUserId);
       } else {
-        await postsProvider.fetchGroupPostsByPostIds(_group.postIds);
+        await postsProvider.fetchGroupPostsByPostIds(_group.postIds, currentUserId: currentUserId);
       }
     });
   }

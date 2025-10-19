@@ -110,11 +110,9 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
 
       if (widget.groupId != null && widget.groupId!.isNotEmpty) {
         Future(() async {
-          final groupProvider = context.read<GroupProvider>();
-          final updatedGroup = await groupProvider.getGroupById(widget.groupId!);
-          if (updatedGroup != null && mounted) {
-            await context.read<PostsProvider>().fetchGroupPostsByPostIds(updatedGroup.postIds);
-          }
+          final auth = context.read<AuthProvider>();
+          final uid = auth.currentUser?.id;
+          await context.read<PostsProvider>().fetchGroupPosts(widget.groupId!, currentUserId: uid);
         });
       }
 

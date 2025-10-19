@@ -705,7 +705,7 @@ class PostService {
   }
 
   // Get group posts
-  Future<List<Post>> getGroupPosts(String groupId, {int limit = 20}) async {
+  Future<List<Post>> getGroupPosts(String groupId, {int limit = 20, String? currentUserId}) async {
     try {
       // Avoid requiring a composite index by not ordering in Firestore
       final querySnapshot = await _postsCollection
@@ -713,13 +713,24 @@ class PostService {
           .limit(limit)
           .get();
 
-      final posts = querySnapshot.docs
+      final basePosts = querySnapshot.docs
           .map((doc) => Post.fromJson(doc.data() as Map<String, dynamic>))
           .toList();
 
+      // If we have a user, enrich with like/bookmark flags in parallel
+      if (currentUserId != null && currentUserId.isNotEmpty) {
+        final enriched = await Future.wait(basePosts.map((p) async {
+          final liked = await _isPostLikedByUser(p.id, currentUserId);
+          final bookmarked = await _isPostBookmarkedByUser(p.id, currentUserId);
+          return p.copyWith(isLiked: liked, isBookmarked: bookmarked);
+        }));
+        enriched.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return enriched;
+      }
+
       // Sort locally by createdAt desc to maintain expected order
-      posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return posts;
+      basePosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return basePosts;
     } catch (e) {
       print('Get group posts error: $e');
       return [];
@@ -727,7 +738,7 @@ class PostService {
   }
 
   // Get posts by a list of IDs (chunks of 10 for whereIn)
-  Future<List<Post>> getPostsByIds(List<String> postIds) async {
+  Future<List<Post>> getPostsByIds(List<String> postIds, {String? currentUserId}) async {
     try {
       if (postIds.isEmpty) return [];
 
@@ -741,6 +752,16 @@ class PostService {
         results.addAll(
           snapshot.docs.map((doc) => Post.fromJson(doc.data() as Map<String, dynamic>)),
         );
+      }
+
+      if (currentUserId != null && currentUserId.isNotEmpty) {
+        final enriched = await Future.wait(results.map((p) async {
+          final liked = await _isPostLikedByUser(p.id, currentUserId);
+          final bookmarked = await _isPostBookmarkedByUser(p.id, currentUserId);
+          return p.copyWith(isLiked: liked, isBookmarked: bookmarked);
+        }));
+        enriched.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return enriched;
       }
 
       // Sort by createdAt desc to ensure stable order
