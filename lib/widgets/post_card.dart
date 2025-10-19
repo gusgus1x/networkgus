@@ -14,6 +14,7 @@ import '../screens/post_detail_screen.dart';
 import '../screens/user_profile_screen.dart';
 import '../widgets/user_avatar.dart';
 import '../widgets/edit_post_dialog.dart';
+import '../widgets/post_video.dart';
 
 class PostCard extends StatelessWidget {
   final Post post;
@@ -38,6 +39,11 @@ class PostCard extends StatelessWidget {
         children: [
           _buildHeader(context),
           if (post.content.isNotEmpty) _buildCaption(context),
+          if (post.videoUrl != null && post.videoUrl!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: PostVideo(url: post.videoUrl!, maxHeight: 320),
+            ),
           if ((post.imageUrls ?? []).isNotEmpty) _PostImages(imageUrls: post.imageUrls!),
           _buildActions(context),
           if (post.reactionCounts.isNotEmpty) _buildReactionChips(),

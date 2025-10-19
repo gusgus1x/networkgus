@@ -540,33 +540,37 @@ class PostsProvider with ChangeNotifier {
         replyToCommentId: replyToCommentId,
       );
 
-      // Update local state
-      if (replyToCommentId == null || replyToCommentId.isEmpty) {
-        final newComment = Comment(
-          id: commentId,
-          postId: postId,
-          userId: userId,
-          content: content,
-          createdAt: DateTime.now(),
-          userDisplayName: userDisplayName,
-          username: username,
-          userProfileImageUrl: userProfileImageUrl,
-          isUserVerified: isUserVerified,
-        );
-        _postComments[postId] ??= [];
-        _postComments[postId]!.add(newComment);
-      } else {
-        final list = _postComments[postId];
-        if (list != null) {
-          final idx = list.indexWhere((c) => c.id == replyToCommentId);
-          if (idx != -1) {
-            final c = list[idx];
-            list[idx] = c.copyWith(repliesCount: c.repliesCount + 1);
+      // If we are NOT listening via stream (e.g., in older screens),
+      // optimistically append to local state; otherwise, the stream will update.
+      final hasStream = _commentSubscriptions[postId] != null;
+      if (!hasStream) {
+        if (replyToCommentId == null || replyToCommentId.isEmpty) {
+          final newComment = Comment(
+            id: commentId,
+            postId: postId,
+            userId: userId,
+            content: content,
+            createdAt: DateTime.now(),
+            userDisplayName: userDisplayName,
+            username: username,
+            userProfileImageUrl: userProfileImageUrl,
+            isUserVerified: isUserVerified,
+          );
+          _postComments[postId] ??= [];
+          _postComments[postId]!.add(newComment);
+          notifyListeners();
+        } else {
+          final list = _postComments[postId];
+          if (list != null) {
+            final idx = list.indexWhere((c) => c.id == replyToCommentId);
+            if (idx != -1) {
+              final c = list[idx];
+              list[idx] = c.copyWith(repliesCount: c.repliesCount + 1);
+              notifyListeners();
+            }
           }
         }
       }
-
-      notifyListeners();
     } catch (e) {
       print('Error adding comment: $e');
       throw Exception('Failed to add comment');

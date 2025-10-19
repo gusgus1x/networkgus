@@ -7,6 +7,7 @@ import '../models/post_model.dart';
 import '../models/comment_model.dart';
 import '../widgets/user_avatar.dart';
 import '../providers/user_provider.dart';
+import '../widgets/post_video.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final String postId;
@@ -170,6 +171,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(post.content, style: const TextStyle(fontSize: 18, height: 1.4, color: Colors.white)),
+          ),
+        if (post.videoUrl != null && post.videoUrl!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: PostVideo(url: post.videoUrl!, maxHeight: 360),
           ),
         if ((post.imageUrls ?? []).isNotEmpty)
           Padding(
