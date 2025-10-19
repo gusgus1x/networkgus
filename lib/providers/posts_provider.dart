@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
@@ -14,9 +15,9 @@ class PostsProvider with ChangeNotifier {
   bool _hasMore = true;
   
   // Comments state
-  Map<String, List<Comment>> _postComments = {};
-  Map<String, bool> _commentsLoading = {};
-  Map<String, StreamSubscription<List<Comment>>?> _commentSubscriptions = {};
+  final Map<String, List<Comment>> _postComments = {};
+  final Map<String, bool> _commentsLoading = {};
+  final Map<String, StreamSubscription<List<Comment>>?> _commentSubscriptions = {};
   
   // Stream subscriptions
   StreamSubscription<List<Post>>? _postsSubscription;
@@ -32,7 +33,7 @@ class PostsProvider with ChangeNotifier {
 
   // Start listening to posts stream for real-time updates
   void startListeningToPosts(String currentUserId) {
-    print('PostsProvider: Starting posts stream for user: $currentUserId');
+  debugPrint('PostsProvider: Starting posts stream for user: $currentUserId');
     
     _isLoading = true;
     notifyListeners();
@@ -43,7 +44,7 @@ class PostsProvider with ChangeNotifier {
     try {
       _postsSubscription = _postService.getFeedPostsStream(currentUserId).listen(
         (posts) {
-          print('PostsProvider: Received ${posts.length} posts from stream');
+          debugPrint('PostsProvider: Received ${posts.length} posts from stream');
           
           // Only update if posts actually changed to prevent unnecessary UI updates
           if (!_arePostsEqual(_posts, posts)) {
@@ -58,13 +59,13 @@ class PostsProvider with ChangeNotifier {
           }
         },
         onError: (error) {
-          print('PostsProvider: Error in posts stream: $error');
+          debugPrint('PostsProvider: Error in posts stream: $error');
           _isLoading = false;
           notifyListeners();
         },
       );
     } catch (e) {
-      print('PostsProvider: Error starting posts stream: $e');
+      debugPrint('PostsProvider: Error starting posts stream: $e');
       _isLoading = false;
       notifyListeners();
     }
@@ -73,14 +74,14 @@ class PostsProvider with ChangeNotifier {
   // Helper method to compare posts arrays - now handles different lengths properly
   bool _arePostsEqual(List<Post> oldPosts, List<Post> newPosts) {
     if (oldPosts.length != newPosts.length) {
-      print('PostsProvider: Posts count changed: ${oldPosts.length} -> ${newPosts.length}');
+      debugPrint('PostsProvider: Posts count changed: ${oldPosts.length} -> ${newPosts.length}');
       return false;
     }
     
     // Check if posts have same IDs in same order
     for (int i = 0; i < oldPosts.length; i++) {
       if (oldPosts[i].id != newPosts[i].id) {
-        print('PostsProvider: Post order changed at index $i');
+        debugPrint('PostsProvider: Post order changed at index $i');
         return false;
       }
       
@@ -89,7 +90,7 @@ class PostsProvider with ChangeNotifier {
           oldPosts[i].commentsCount != newPosts[i].commentsCount ||
           oldPosts[i].isLiked != newPosts[i].isLiked ||
           oldPosts[i].isBookmarked != newPosts[i].isBookmarked) {
-        print('PostsProvider: Post ${oldPosts[i].id} stats changed');
+        debugPrint('PostsProvider: Post ${oldPosts[i].id} stats changed');
         return false;
       }
     }
@@ -99,14 +100,14 @@ class PostsProvider with ChangeNotifier {
 
   // Stop listening to posts stream
   void stopListeningToPosts() {
-    print('PostsProvider: Stopping posts stream');
+  debugPrint('PostsProvider: Stopping posts stream');
     _postsSubscription?.cancel();
     _postsSubscription = null;
   }
 
   // Legacy method for backward compatibility - now prevents duplicates
   Future<void> fetchPosts({bool refresh = false, String? currentUserId}) async {
-    print('PostsProvider: fetchPosts called with userId: $currentUserId'); // Debug
+  debugPrint('PostsProvider: fetchPosts called with userId: $currentUserId'); // Debug
     
     if (refresh) {
       _posts.clear();
@@ -120,7 +121,7 @@ class PostsProvider with ChangeNotifier {
 
     try {
       if (currentUserId != null) {
-        print('PostsProvider: Fetching posts for user: $currentUserId'); // Debug
+  debugPrint('PostsProvider: Fetching posts for user: $currentUserId'); // Debug
         // For now, try to get trending posts since feed might be empty
         List<Post> newPosts = [];
         
@@ -128,7 +129,7 @@ class PostsProvider with ChangeNotifier {
           // First try to get feed posts
           newPosts = await _postService.getFeedPosts(currentUserId, limit: 10);
         } catch (e) {
-          print('Feed posts error: $e');
+          debugPrint('Feed posts error: $e');
         }
         
         // If no feed posts, try trending posts
@@ -136,11 +137,11 @@ class PostsProvider with ChangeNotifier {
           try {
             newPosts = await _postService.getTrendingPosts(limit: 10);
           } catch (e) {
-            print('Trending posts error: $e');
+            debugPrint('Trending posts error: $e');
           }
         }
         
-        print('PostsProvider: Got ${newPosts.length} posts'); // Debug
+  debugPrint('PostsProvider: Got ${newPosts.length} posts'); // Debug
         
         if (newPosts.isEmpty) {
           _hasMore = false;
@@ -151,19 +152,19 @@ class PostsProvider with ChangeNotifier {
           
           if (uniqueNewPosts.isNotEmpty) {
             _posts.addAll(uniqueNewPosts);
-            print('PostsProvider: Added ${uniqueNewPosts.length} unique posts');
+            debugPrint('PostsProvider: Added ${uniqueNewPosts.length} unique posts');
           } else {
-            print('PostsProvider: No new unique posts to add');
+            debugPrint('PostsProvider: No new unique posts to add');
             _hasMore = false; // Stop trying if no new posts
           }
         }
       } else {
-        print('PostsProvider: No user logged in'); // Debug
+        debugPrint('PostsProvider: No user logged in'); // Debug
         // No user logged in, show empty
         _hasMore = false;
       }
     } catch (e) {
-      print('Error fetching posts: $e');
+      debugPrint('Error fetching posts: $e');
       _hasMore = false;
     }
 
@@ -177,7 +178,7 @@ class PostsProvider with ChangeNotifier {
     try {
       _groupPosts = await _postService.getGroupPosts(groupId, currentUserId: currentUserId);
     } catch (e) {
-      print('Error fetching group posts: $e');
+      debugPrint('Error fetching group posts: $e');
       _groupPosts = [];
     }
     _isLoading = false;
@@ -190,7 +191,7 @@ class PostsProvider with ChangeNotifier {
     try {
       _groupPosts = await _postService.getPostsByIds(postIds, currentUserId: currentUserId);
     } catch (e) {
-      print('Error fetching group posts by IDs: $e');
+      debugPrint('Error fetching group posts by IDs: $e');
       _groupPosts = [];
     }
     _isLoading = false;
@@ -214,7 +215,7 @@ class PostsProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    try {
+  try {
       if (groupId != null && groupId.isNotEmpty) {
         // Create post for group and then refresh that group's feed
         await _postService.createPostForGroup(
@@ -254,7 +255,7 @@ class PostsProvider with ChangeNotifier {
         await fetchPosts(refresh: true, currentUserId: userId);
       }
     } catch (e) {
-      print('Error creating post: $e');
+      debugPrint('Error creating post: $e');
     }
 
     _isLoading = false;
@@ -282,7 +283,7 @@ class PostsProvider with ChangeNotifier {
     if (gIdx != -1) applyLike(_groupPosts, gIdx);
     notifyListeners();
 
-    try {
+  try {
       if (wasLiked) {
         await _postService.unlikePost(postId, userId);
       } else {
@@ -292,7 +293,7 @@ class PostsProvider with ChangeNotifier {
       if (pIdx != -1 && originalP != null) _posts[pIdx] = originalP;
       if (gIdx != -1 && originalG != null) _groupPosts[gIdx] = originalG;
       notifyListeners();
-      print('Error liking post: $e');
+      debugPrint('Error liking post: $e');
     }
   }
 
@@ -312,7 +313,7 @@ class PostsProvider with ChangeNotifier {
     if (gIdx != -1) applyBookmark(_groupPosts, gIdx);
     notifyListeners();
 
-    try {
+  try {
       if (wasBookmarked) {
         await _postService.removeBookmark(postId, userId);
       } else {
@@ -322,7 +323,7 @@ class PostsProvider with ChangeNotifier {
       if (pIdx != -1 && originalP != null) _posts[pIdx] = originalP;
       if (gIdx != -1 && originalG != null) _groupPosts[gIdx] = originalG;
       notifyListeners();
-      print('Error bookmarking post: $e');
+      debugPrint('Error bookmarking post: $e');
     }
   }
 
@@ -349,7 +350,7 @@ class PostsProvider with ChangeNotifier {
       if (removedFromPosts != null) _posts.add(removedFromPosts);
       if (removedFromGroup != null) _groupPosts.add(removedFromGroup);
       notifyListeners();
-      print('Error deleting post: $e');
+      debugPrint('Error deleting post: $e');
     }
   }
 
@@ -383,8 +384,8 @@ class PostsProvider with ChangeNotifier {
         newMap[prev] = (newMap[prev] ?? 0) - 1;
         if ((newMap[prev] ?? 0) <= 0) newMap.remove(prev);
       }
-      if (emoji != null && emoji!.isNotEmpty) {
-        newMap[emoji!] = (newMap[emoji!] ?? 0) + 1;
+      if (emoji != null && emoji.isNotEmpty) {
+        newMap[emoji] = (newMap[emoji] ?? 0) + 1;
       }
       list[i] = list[i].copyWith(reactionCounts: newMap, userReaction: emoji);
     }
@@ -458,7 +459,7 @@ class PostsProvider with ChangeNotifier {
 
   // Start listening to comments stream for real-time updates
   void startListeningToComments(String postId) {
-    print('PostsProvider: Starting comments stream for post: $postId');
+  debugPrint('PostsProvider: Starting comments stream for post: $postId');
     
     // Cancel existing subscription for this post
     _commentSubscriptions[postId]?.cancel();
@@ -469,19 +470,19 @@ class PostsProvider with ChangeNotifier {
     try {
       _commentSubscriptions[postId] = _postService.getPostCommentsStream(postId).listen(
         (comments) {
-          print('PostsProvider: Received ${comments.length} comments from stream for post: $postId');
+          debugPrint('PostsProvider: Received ${comments.length} comments from stream for post: $postId');
           _postComments[postId] = comments;
           _commentsLoading[postId] = false;
           notifyListeners();
         },
         onError: (error) {
-          print('PostsProvider: Error in comments stream for post $postId: $error');
+          debugPrint('PostsProvider: Error in comments stream for post $postId: $error');
           _commentsLoading[postId] = false;
           notifyListeners();
         },
       );
     } catch (e) {
-      print('PostsProvider: Error starting comments stream for post $postId: $e');
+      debugPrint('PostsProvider: Error starting comments stream for post $postId: $e');
       _commentsLoading[postId] = false;
       notifyListeners();
     }
@@ -489,16 +490,16 @@ class PostsProvider with ChangeNotifier {
 
   // Stop listening to comments stream for a specific post
   void stopListeningToComments(String postId) {
-    print('PostsProvider: Stopping comments stream for post: $postId');
+  debugPrint('PostsProvider: Stopping comments stream for post: $postId');
     _commentSubscriptions[postId]?.cancel();
     _commentSubscriptions.remove(postId);
   }
 
   // Comment functionality (legacy method for compatibility)
   Future<void> loadCommentsForPost(String postId) async {
-    print('PostsProvider: Loading comments for post: $postId');
+  debugPrint('PostsProvider: Loading comments for post: $postId');
     if (_commentsLoading[postId] == true) {
-      print('PostsProvider: Already loading comments for post: $postId');
+  debugPrint('PostsProvider: Already loading comments for post: $postId');
       return;
     }
 
@@ -507,10 +508,10 @@ class PostsProvider with ChangeNotifier {
 
     try {
       final comments = await _postService.getPostComments(postId);
-      print('PostsProvider: Loaded ${comments.length} comments for post: $postId');
+      debugPrint('PostsProvider: Loaded ${comments.length} comments for post: $postId');
       _postComments[postId] = comments;
     } catch (e) {
-      print('Error loading comments: $e');
+      debugPrint('Error loading comments: $e');
       _postComments[postId] = [];
     }
 
@@ -572,7 +573,7 @@ class PostsProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      print('Error adding comment: $e');
+      debugPrint('Error adding comment: $e');
       throw Exception('Failed to add comment');
     }
   }
@@ -607,7 +608,7 @@ class PostsProvider with ChangeNotifier {
     try {
       return await _postService.getUserPosts(userId);
     } catch (e) {
-      print('PostsProvider: Error getting user posts: $e');
+      debugPrint('PostsProvider: Error getting user posts: $e');
       throw Exception('Failed to get user posts');
     }
   }
@@ -616,7 +617,7 @@ class PostsProvider with ChangeNotifier {
   List<Comment> getRepliesFor(String parentCommentId) => _replies[parentCommentId] ?? [];
 
   Future<void> loadReplies(String postId, String parentCommentId) async {
-    try {
+  try {
       final list = await _postService.getReplies(postId, parentCommentId);
       _replies[parentCommentId] = list;
       notifyListeners();

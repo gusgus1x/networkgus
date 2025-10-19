@@ -7,7 +7,7 @@ import 'chat_screen.dart';
 import 'search_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
-  const ChatListScreen({Key? key}) : super(key: key);
+  const ChatListScreen({super.key});
 
   @override
   State<ChatListScreen> createState() => _ChatListScreenState();

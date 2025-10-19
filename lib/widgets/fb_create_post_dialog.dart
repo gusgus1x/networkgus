@@ -9,7 +9,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
-import '../providers/group_provider.dart';
 import '../providers/posts_provider.dart';
 import '../services/cloudinary_service.dart';
 
@@ -29,7 +28,6 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
   final ImagePicker _picker = ImagePicker();
 
   bool _isPosting = false;
-  String _audience = 'Only me';
 
   // Non-web
   List<File> _selectedImages = [];

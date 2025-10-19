@@ -1,4 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
 
 class UserService {
@@ -75,9 +76,9 @@ class UserService {
       }
       
       await batch.commit();
-      print('Mock users created successfully');
+      debugPrint('Mock users created successfully');
     } catch (e) {
-      print('Error creating mock users: $e');
+      debugPrint('Error creating mock users: $e');
     }
   }
 
@@ -108,7 +109,7 @@ class UserService {
         await batch.commit();
       }
     } catch (e) {
-      print('Add recent search error: $e');
+      debugPrint('Add recent search error: $e');
     }
   }
 
@@ -123,9 +124,7 @@ class UserService {
           .limit(limit)
           .get();
 
-      final ids = recentsSnap.docs
-          .map((d) => (d.data() as Map<String, dynamic>)['userId'] as String)
-          .toList();
+    final ids = recentsSnap.docs.map((d) => d.get('userId') as String).toList();
 
       if (ids.isEmpty) return [];
 
@@ -145,7 +144,7 @@ class UserService {
       users.sort((a, b) => ids.indexOf(a.id).compareTo(ids.indexOf(b.id)));
       return users;
     } catch (e) {
-      print('Get recent searches error: $e');
+      debugPrint('Get recent searches error: $e');
       return [];
     }
   }
@@ -165,7 +164,7 @@ class UserService {
       }
       await batch.commit();
     } catch (e) {
-      print('Clear recent searches error: $e');
+      debugPrint('Clear recent searches error: $e');
     }
   }
 
@@ -201,7 +200,7 @@ class UserService {
       }
       return deleted;
     } catch (e) {
-      print('Delete mock users error: $e');
+      debugPrint('Delete mock users error: $e');
       return 0;
     }
   }
@@ -217,7 +216,7 @@ class UserService {
       }
       return null;
     } catch (e) {
-      print('Get user by ID error: $e');
+      debugPrint('Get user by ID error: $e');
       throw Exception('Failed to get user');
     }
   }
@@ -247,7 +246,7 @@ class UserService {
       }
       return null;
     } catch (e) {
-      print('Get user by username error: $e');
+      debugPrint('Get user by username error: $e');
       throw Exception('Failed to get user');
     }
   }
@@ -279,7 +278,7 @@ class UserService {
           data['id'] = doc.id; // Ensure id is set from document ID
           users.add(User.fromMap(data));
         } catch (e) {
-          print('Error parsing user document ${doc.id}: $e');
+          debugPrint('Error parsing user document ${doc.id}: $e');
           continue;
         }
       }
@@ -310,14 +309,14 @@ class UserService {
             users.add(user);
           }
         } catch (e) {
-          print('Error parsing user document ${doc.id}: $e');
+          debugPrint('Error parsing user document ${doc.id}: $e');
           continue;
         }
       }
 
       return users;
     } catch (e) {
-      print('Search users error: $e');
+      debugPrint('Search users error: $e');
       throw Exception('Failed to search users');
     }
   }
@@ -363,7 +362,7 @@ class UserService {
 
       await batch.commit();
     } catch (e) {
-      print('Follow user error: $e');
+      debugPrint('Follow user error: $e');
       throw Exception('Failed to follow user');
     }
   }
@@ -403,7 +402,7 @@ class UserService {
 
       await batch.commit();
     } catch (e) {
-      print('Unfollow user error: $e');
+      debugPrint('Unfollow user error: $e');
       throw Exception('Failed to unfollow user');
     }
   }
@@ -419,7 +418,7 @@ class UserService {
           .get();
       return doc.exists;
     } catch (e) {
-      print('Check following error: $e');
+      debugPrint('Check following error: $e');
       return false;
     }
   }
@@ -445,7 +444,7 @@ class UserService {
 
       return followers;
     } catch (e) {
-      print('Get followers error: $e');
+      debugPrint('Get followers error: $e');
       throw Exception('Failed to get followers');
     }
   }
@@ -471,7 +470,7 @@ class UserService {
 
       return following;
     } catch (e) {
-      print('Get following error: $e');
+      debugPrint('Get following error: $e');
       throw Exception('Failed to get following');
     }
   }
@@ -497,7 +496,7 @@ class UserService {
         await _usersCollection.doc(userId).update(updateData);
       }
     } catch (e) {
-      print('Update user profile error: $e');
+      debugPrint('Update user profile error: $e');
       throw Exception('Failed to update profile');
     }
   }
@@ -551,7 +550,7 @@ class UserService {
         }
       }
     } catch (e) {
-      print('Propagate user profile changes error: $e');
+      debugPrint('Propagate user profile changes error: $e');
       // Non-fatal
     }
   }
@@ -581,7 +580,7 @@ class UserService {
 
       return suggestedUsers;
     } catch (e) {
-      print('Get suggested users error: $e');
+      debugPrint('Get suggested users error: $e');
       throw Exception('Failed to get suggested users');
     }
   }
@@ -605,7 +604,7 @@ class UserService {
         await unfollowUser(currentUserId, targetUserId);
       }
     } catch (e) {
-      print('Block user error: $e');
+      debugPrint('Block user error: $e');
       throw Exception('Failed to block user');
     }
   }
@@ -620,7 +619,7 @@ class UserService {
           .doc(targetUserId)
           .delete();
     } catch (e) {
-      print('Unblock user error: $e');
+      debugPrint('Unblock user error: $e');
       throw Exception('Failed to unblock user');
     }
   }
@@ -636,7 +635,7 @@ class UserService {
           .get();
       return doc.exists;
     } catch (e) {
-      print('Check blocked error: $e');
+      debugPrint('Check blocked error: $e');
       return false;
     }
   }
@@ -656,14 +655,14 @@ class UserService {
           data['id'] = doc.id; // Ensure id is set from document ID
           users.add(User.fromMap(data));
         } catch (e) {
-          print('Error parsing user document ${doc.id}: $e');
+          debugPrint('Error parsing user document ${doc.id}: $e');
           continue;
         }
       }
 
       return users;
     } catch (e) {
-      print('Get all users error: $e');
+      debugPrint('Get all users error: $e');
       throw Exception('Failed to get users');
     }
   }
@@ -681,8 +680,9 @@ class UserService {
             .toList();
       });
     } catch (e) {
-      print('Get users stream error: $e');
+      debugPrint('Get users stream error: $e');
       throw Exception('Failed to get users stream');
     }
   }
 }
+

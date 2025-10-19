@@ -25,17 +25,14 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<User> _searchResults = [];
-  List<User> _suggestedUsers = [];
   List<User> _recentUsers = [];
   bool _isSearching = false;
-  bool _isLoadingSuggestions = false; // Disable suggestions by default
   bool _isLoadingRecents = false;
   DateTime _lastSearchTime = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    // Suggestions disabled: do not auto-load suggested users
     _loadRecentUsers();
   }
 
@@ -43,34 +40,6 @@ class _SearchScreenState extends State<SearchScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadSuggestedUsers() async {
-    try {
-      final userProvider = context.read<UserProvider>();
-      final auth = context.read<AuthProvider>();
-      final uid = auth.currentUser?.id;
-      if (uid == null) {
-        setState(() {
-          _suggestedUsers = [];
-          _isLoadingSuggestions = false;
-        });
-        return;
-      }
-      final suggestions = await userProvider.getSuggestedUsers(uid);
-      if (mounted) {
-        setState(() {
-          _suggestedUsers = suggestions;
-          _isLoadingSuggestions = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoadingSuggestions = false;
-        });
-      }
-    }
   }
 
   Future<void> _performSearch(String query) async {

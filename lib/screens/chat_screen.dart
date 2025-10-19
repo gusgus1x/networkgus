@@ -34,7 +34,6 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _picker = ImagePicker();
-  bool _sendingAttachment = false;
   // Pending media to send with optional caption
   Uint8List? _pendingImageBytes;
   String? _pendingImageName;
@@ -541,8 +540,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _pickImageForMessage({bool fromCamera = false}) async {
     try {
-      setState(() => _sendingAttachment = true);
-
       XFile? pickedXFile;
 
       if (kIsWeb) {
@@ -570,7 +567,7 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _sendingAttachment = false);
+      // Nothing to clean up besides pending image state.
     }
   }
 
@@ -591,7 +588,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // If there is a pending image, upload and send image message with optional caption
       if (_pendingImageBytes != null) {
-        setState(() => _sendingAttachment = true);
         final chatService = ChatService();
         final imageUrl = await chatService.uploadChatImage(
           conversationId: widget.conversationId,
@@ -618,7 +614,6 @@ class _ChatScreenState extends State<ChatScreen> {
         setState(() {
           _pendingImageBytes = null;
           _pendingImageName = null;
-          _sendingAttachment = false;
         });
       } else {
         // Text message

@@ -45,7 +45,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   Future<void> _pickAndUploadGroupImage() async {
     try {
       setState(() => _updatingImage = true);
-      Uint8List? bytes;
+      late final Uint8List bytes;
       String filename = 'group.jpg';
       if (kIsWeb) {
         final picker = ImagePicker();
@@ -71,7 +71,6 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           filename = x.name;
         }
       }
-      if (bytes == null) return;
 
       final cloudinary = CloudinaryService(folder: 'networkgus/groups');
       final url = await cloudinary.uploadImageBytes(bytes, filename: filename);

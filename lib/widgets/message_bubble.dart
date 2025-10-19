@@ -24,8 +24,7 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final otherBubbleColor = theme.cardColor;
-    final otherTextColor = theme.textTheme.bodyLarge?.color ?? (theme.brightness == Brightness.dark ? Colors.white : Colors.black87);
+  final otherBubbleColor = theme.cardColor;
     final hint = theme.hintColor;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -65,7 +64,7 @@ class MessageBubble extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
                   ),
@@ -90,7 +89,7 @@ class MessageBubble extends StatelessWidget {
                         const SizedBox(width: 4),
                         Icon(
                           message.isRead ? Icons.done_all : Icons.done,
-                          color: message.isRead ? theme.colorScheme.onPrimary.withOpacity(0.8) : Colors.white70,
+                          color: message.isRead ? theme.colorScheme.onPrimary.withValues(alpha: 0.8) : Colors.white70,
                           size: 14,
                         ),
                       ],
@@ -154,7 +153,9 @@ class MessageBubble extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isMe ? Colors.white.withOpacity(0.2) : theme.colorScheme.surfaceVariant.withOpacity(0.4),
+            color: isMe
+                ? Colors.white.withValues(alpha: 0.2)
+                : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(

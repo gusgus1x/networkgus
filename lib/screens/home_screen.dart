@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/posts_provider.dart';
@@ -29,8 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = context.read<AuthProvider>();
       final currentUserId = authProvider.currentUser?.id;
-      print('HomeScreen: Current user ID: $currentUserId'); // Debug
-      print('HomeScreen: Is logged in: ${authProvider.isLoggedIn}'); // Debug
+  debugPrint('HomeScreen: Current user ID: $currentUserId');
+  debugPrint('HomeScreen: Is logged in: ${authProvider.isLoggedIn}');
       
       if (currentUserId != null) {
         // Start listening to real-time posts stream

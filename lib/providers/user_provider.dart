@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/user_service.dart';
@@ -26,8 +27,9 @@ class UserProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return user;
-    } catch (e) {
-      print('UserProvider: Error getting user by ID: $e');
+    } catch (e, stackTrace) {
+      debugPrint('UserProvider: Error getting user by ID: $e');
+      debugPrintStack(stackTrace: stackTrace);
       _isLoading = false;
       notifyListeners();
       return null;
@@ -45,8 +47,9 @@ class UserProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return results;
-    } catch (e) {
-      print('UserProvider: Error searching users: $e');
+    } catch (e, stackTrace) {
+      debugPrint('UserProvider: Error searching users: $e');
+      debugPrintStack(stackTrace: stackTrace);
       _isLoading = false;
       notifyListeners();
       return [];
@@ -63,8 +66,9 @@ class UserProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return suggestions;
-    } catch (e) {
-      print('UserProvider: Error getting suggested users: $e');
+    } catch (e, stackTrace) {
+      debugPrint('UserProvider: Error getting suggested users: $e');
+      debugPrintStack(stackTrace: stackTrace);
       _isLoading = false;
       notifyListeners();
       return [];
@@ -90,8 +94,9 @@ class UserProvider with ChangeNotifier {
       }
       
       return true;
-    } catch (e) {
-      print('UserProvider: Error following user: $e');
+    } catch (e, stackTrace) {
+      debugPrint('UserProvider: Error following user: $e');
+      debugPrintStack(stackTrace: stackTrace);
       return false;
     }
   }
@@ -110,8 +115,9 @@ class UserProvider with ChangeNotifier {
       }
       
       return true;
-    } catch (e) {
-      print('UserProvider: Error unfollowing user: $e');
+    } catch (e, stackTrace) {
+      debugPrint('UserProvider: Error unfollowing user: $e');
+      debugPrintStack(stackTrace: stackTrace);
       return false;
     }
   }
@@ -119,8 +125,9 @@ class UserProvider with ChangeNotifier {
   Future<List<User>> getAllUsers() async {
     try {
       return await _userService.getAllUsers();
-    } catch (e) {
-      print('UserProvider: Error getting all users: $e');
+    } catch (e, stackTrace) {
+      debugPrint('UserProvider: Error getting all users: $e');
+      debugPrintStack(stackTrace: stackTrace);
       return [];
     }
   }
@@ -129,16 +136,18 @@ class UserProvider with ChangeNotifier {
   Future<void> addRecentSearch(String currentUserId, String viewedUserId) async {
     try {
       await _userService.addRecentSearch(currentUserId, viewedUserId);
-    } catch (e) {
-      print('UserProvider: Error adding recent search: $e');
+    } catch (e, stackTrace) {
+      debugPrint('UserProvider: Error adding recent search: $e');
+      debugPrintStack(stackTrace: stackTrace);
     }
   }
 
   Future<List<User>> getRecentSearches(String currentUserId, {int limit = 20}) async {
     try {
       return await _userService.getRecentSearches(currentUserId, limit: limit);
-    } catch (e) {
-      print('UserProvider: Error getting recent searches: $e');
+    } catch (e, stackTrace) {
+      debugPrint('UserProvider: Error getting recent searches: $e');
+      debugPrintStack(stackTrace: stackTrace);
       return [];
     }
   }
@@ -146,8 +155,9 @@ class UserProvider with ChangeNotifier {
   Future<void> clearRecentSearches(String currentUserId) async {
     try {
       await _userService.clearRecentSearches(currentUserId);
-    } catch (e) {
-      print('UserProvider: Error clearing recent searches: $e');
+    } catch (e, stackTrace) {
+      debugPrint('UserProvider: Error clearing recent searches: $e');
+      debugPrintStack(stackTrace: stackTrace);
     }
   }
 
@@ -155,8 +165,9 @@ class UserProvider with ChangeNotifier {
   Future<bool> isFollowing(String currentUserId, String targetUserId) async {
     try {
       return await _userService.isFollowing(currentUserId, targetUserId);
-    } catch (e) {
-      print('UserProvider: Error checking follow status: $e');
+    } catch (e, stackTrace) {
+      debugPrint('UserProvider: Error checking follow status: $e');
+      debugPrintStack(stackTrace: stackTrace);
       return false;
     }
   }

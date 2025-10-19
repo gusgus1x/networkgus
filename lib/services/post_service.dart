@@ -1,6 +1,7 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'cloudinary_service.dart';
 import '../models/post_model.dart';
 import '../models/comment_model.dart';
@@ -11,7 +12,7 @@ class PostService {
   final CollectionReference _postsCollection = FirebaseFirestore.instance.collection('posts');
   final CloudinaryService _cloudinary = CloudinaryService();
 
-  // Upload post video to Firebase Storage (ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â 10 ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Âµ)
+  // Upload post video to Firebase Storage (รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌยนรยขรขโ€ยฌรย รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยณรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฑรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรโ€รย 10 รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยงรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยดรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโ€ยฌร…ยพรโ€รยขรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฒรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรยขรขโ€ยฌรยรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยต)
 
   // Create a new post
   Future<String> createPost({
@@ -23,7 +24,7 @@ class PostService {
     bool isUserVerified = false,
     List<File>? imageFiles,
     List<String>? imageUrls,
-    File? videoFile, // ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â¡ parameter ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â­
+    File? videoFile, // รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโ€ยฌร…ยกรโ€รยฌรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌยฆรโ€รยพรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยดรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รขโฌยนรยขรขโ€ยฌรย รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยก parameter รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยชรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยณรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยซรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฃรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฑรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌยฆรโ€รยกรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยงรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยดรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรโ€รยรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยตรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโฌลกรยฌรโ€ฆรยกรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยญ
     String? videoUrl,
     String? groupId,
   }) async {
@@ -72,9 +73,9 @@ class PostService {
       await _firestore.collection('users').doc(userId).update({
         'postsCount': FieldValue.increment(1),
       });
-  // Upload post video to Firebase Storage (ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â 10 ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Âµ)
+  // Upload post video to Firebase Storage (รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌยนรยขรขโ€ยฌรย รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยณรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฑรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรโ€รย 10 รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยงรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยดรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโ€ยฌร…ยพรโ€รยขรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฒรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรยขรขโ€ยฌรยรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยต)
 
-      // ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹Ãƒâ€¦Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â¡ ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â¡ postId ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â² group.postIds
+      // รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรยขรขโ€ยฌร…โ€รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโฌลกรยฌรโ€รยฐรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฒรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโ€ยฌร…ยกรโ€รยฌรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรโ€รยบรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโฌลกรยฌรโ€รยกรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโ€ยฌร…ยพรโ€รยขรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโฌลกรยฌรโ€ฆรยกรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌยฆรโ€รยพรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยชรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรโ€รยขรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รขโฌยฆรยขรขโ€ยฌรขโ€ยขรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รขโฌย รยขรขโ€ยฌรขโ€ยขรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโ€ยฌร…ยพรโ€รยขรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฅรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยธรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รขโฌยนรยขรขโ€ยฌรย รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยก รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รขโฌย รยขรขโ€ยฌรขโ€ยขรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยซรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโฌลกรยฌรโ€รยฐรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโ€ยฌร…ยกรโ€รยฌรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌยฆรโ€รยพรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยดรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รขโฌยนรยขรขโ€ยฌรย รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยก postId รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโ€ยฌร…ยกรโ€รยฌรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรโ€ฆรยกรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโฌลกรยฌรโ€รยฐรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฒ group.postIds
       if (groupId != null && groupId.isNotEmpty) {
         await _firestore.collection('groups').doc(groupId).update({
           'postIds': FieldValue.arrayUnion([postRef.id]),
@@ -82,8 +83,9 @@ class PostService {
       }
 
       return postRef.id;
-    } catch (e) {
-      print('Create post error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Create post error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to create post');
     }
   }
@@ -105,12 +107,12 @@ class PostService {
 
       await _postsCollection.doc(postId).update(updates);
     } catch (e) {
-      print('Update post error: $e');
+      debugPrint('Update post error: $e');
       throw Exception('Failed to update post');
     }
   }
 
-  // Set or clear an emoji reaction for a user (including dislike via 'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€¦Ã‚Â½')
+  // Set or clear an emoji reaction for a user (including dislike via 'รฦ’รโ€รโ€รยฐรฦ’รขโฌยฆรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรโ€นร…โ€รฦ’รขโฌยฆรโ€รยฝ')
   Future<void> setReaction({
     required String postId,
     required String userId,
@@ -152,15 +154,15 @@ class PostService {
         txn.update(postRef, {'updatedAt': FieldValue.serverTimestamp()});
       });
     } catch (e) {
-      print('Set reaction error: $e');
+      debugPrint('Set reaction error: $e');
       throw Exception('Failed to set reaction');
     }
   }
 
-  // Upload post video to Firebase Storage (ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â 10 ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Âµ)
+  // Upload post video to Firebase Storage (รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌยนรยขรขโ€ยฌรย รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยณรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฑรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรโ€รย 10 รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยงรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยดรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโ€ยฌร…ยพรโ€รยขรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฒรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรยขรขโ€ยฌรยรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยต)
   Future<String> _uploadPostVideo(File videoFile) async {
     try {
-      // TODO: ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ 10 ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Âµ (ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¹ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â° package video_player ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â£ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â·ÃƒÆ’Ã‚Â Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â­ ffmpeg)
+      // TODO: รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรโ€รยขรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฃรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยงรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌยนรยขรขโ€ยฌรย รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยชรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยญรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌยฆรโ€รยกรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรโ€ฆรยพรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยงรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฒรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยกรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยขรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฒรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยงรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยงรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยดรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรโ€รยรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยตรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโฌลกรยฌรโ€ฆรยกรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยญรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโฌลกรยฌรโ€ฆรยพรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยกรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รขโฌยนรยขรขโ€ยฌรย รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโ€ยฌร…ยกรโ€รยฌรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยดรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโ€ยฌร…ยพรโ€รยข 10 รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยงรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยดรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโ€ยฌร…ยพรโ€รยขรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฒรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รยขรยขรขโฌลกรยฌรยขรขโ€ยฌรยรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยต (รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รขโฌย รยขรขโ€ยฌรขโ€ยขรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌยฆรโ€รย รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยนรฦ’รยขรยขรขโฌลกรยฌรโ€รยฐ package video_player รฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยซรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยฃรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยทรฦ’รโ€รโ€รย รฦ’รขโฌลกรโ€รยธรฦ’รขโฌลกรโ€รยญ ffmpeg)
       final String fileName = '${DateTime.now().millisecondsSinceEpoch}_video.mp4';
       final Reference ref = _storage.ref().child('posts/videos').child(fileName);
       final UploadTask uploadTask = ref.putFile(videoFile);
@@ -168,7 +170,7 @@ class PostService {
       final String downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      print('Upload video error: $e');
+      debugPrint('Upload video error: $e');
       throw Exception('Failed to upload video');
     }
   }
@@ -182,7 +184,7 @@ class PostService {
       }
       return await Future.wait(uploads);
     } catch (e) {
-      print('Upload images error (Cloudinary): $e');
+      debugPrint('Upload images error (Cloudinary): $e');
       throw Exception('Failed to upload images to Cloudinary');
     }
   }
@@ -196,7 +198,7 @@ class PostService {
           .limit(limit)
           .snapshots()
           .asyncMap((snapshot) async {
-        print('PostService: Stream received ${snapshot.docs.length} documents');
+  debugPrint('PostService: Stream received ${snapshot.docs.length} documents');
         final List<Post> posts = [];
 
         for (var doc in snapshot.docs) {
@@ -209,11 +211,11 @@ class PostService {
           posts.add(post.copyWith(isLiked: isLiked, isBookmarked: isBookmarked));
         }
 
-        print('PostService: Returning ${posts.length} posts from stream');
+  debugPrint('PostService: Returning ${posts.length} posts from stream');
         return posts;
       });
     } catch (e) {
-      print('Get feed posts stream error: $e');
+      debugPrint('Get feed posts stream error: $e');
       throw Exception('Failed to get feed posts stream');
     }
   }
@@ -269,7 +271,7 @@ class PostService {
 
       return posts;
     } catch (e) {
-      print('Get feed posts error: $e');
+      debugPrint('Get feed posts error: $e');
       throw Exception('Failed to get feed posts');
     }
   }
@@ -295,7 +297,7 @@ class PostService {
 
       return posts;
     } catch (e) {
-      print('Get user posts error: $e');
+      debugPrint('Get user posts error: $e');
       throw Exception('Failed to get user posts');
     }
   }
@@ -320,7 +322,7 @@ class PostService {
         return posts;
       });
     } catch (e) {
-      print('Get user posts stream error: $e');
+      debugPrint('Get user posts stream error: $e');
       rethrow;
     }
   }
@@ -334,7 +336,7 @@ class PostService {
       }
       return null;
     } catch (e) {
-      print('Get post by ID error: $e');
+      debugPrint('Get post by ID error: $e');
       throw Exception('Failed to get post');
     }
   }
@@ -361,7 +363,7 @@ class PostService {
 
       await batch.commit();
     } catch (e) {
-      print('Like post error: $e');
+      debugPrint('Like post error: $e');
       throw Exception('Failed to like post');
     }
   }
@@ -385,7 +387,7 @@ class PostService {
 
       await batch.commit();
     } catch (e) {
-      print('Unlike post error: $e');
+      debugPrint('Unlike post error: $e');
       throw Exception('Failed to unlike post');
     }
   }
@@ -401,7 +403,7 @@ class PostService {
           .get();
       return doc.exists;
     } catch (e) {
-      print('Check like error: $e');
+      debugPrint('Check like error: $e');
       return false;
     }
   }
@@ -419,7 +421,7 @@ class PostService {
         'bookmarkedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Bookmark post error: $e');
+      debugPrint('Bookmark post error: $e');
       throw Exception('Failed to bookmark post');
     }
   }
@@ -434,7 +436,7 @@ class PostService {
           .doc(postId)
           .delete();
     } catch (e) {
-      print('Remove bookmark error: $e');
+      debugPrint('Remove bookmark error: $e');
       throw Exception('Failed to remove bookmark');
     }
   }
@@ -450,7 +452,7 @@ class PostService {
           .get();
       return doc.exists;
     } catch (e) {
-      print('Check bookmark error: $e');
+      debugPrint('Check bookmark error: $e');
       return false;
     }
   }
@@ -483,7 +485,7 @@ class PostService {
 
       return posts;
     } catch (e) {
-      print('Get bookmarked posts error: $e');
+      debugPrint('Get bookmarked posts error: $e');
       throw Exception('Failed to get bookmarked posts');
     }
   }
@@ -508,7 +510,7 @@ class PostService {
       // Delete subcollections (likes, comments) - This would typically be done with Cloud Functions
       // For now, we'll leave them as they'll be cleaned up eventually
     } catch (e) {
-      print('Delete post error: $e');
+      debugPrint('Delete post error: $e');
       throw Exception('Failed to delete post');
     }
   }
@@ -558,7 +560,7 @@ class PostService {
       await batch.commit();
       return commentRef.id;
     } catch (e) {
-      print('Add comment error: $e');
+      debugPrint('Add comment error: $e');
       throw Exception('Failed to add comment');
     }
   }
@@ -587,7 +589,7 @@ class PostService {
       });
       await batch.commit();
     } catch (e) {
-      print('Delete emoji comment error: $e');
+      debugPrint('Delete emoji comment error: $e');
       throw Exception('Failed to delete emoji comment');
     }
   }
@@ -595,7 +597,7 @@ class PostService {
   // Get post comments stream for real-time updates
   Stream<List<Comment>> getPostCommentsStream(String postId, {int limit = 50}) {
     try {
-      print('PostService: Setting up comments stream for post $postId');
+      debugPrint('PostService: Setting up comments stream for post $postId');
       
       return _firestore
           .collection('posts')
@@ -605,7 +607,7 @@ class PostService {
           .limit(limit)
           .snapshots()
           .map((snapshot) {
-        print('PostService: Stream received ${snapshot.docs.length} comment documents');
+        debugPrint('PostService: Stream received ${snapshot.docs.length} comment documents');
         
         final List<Comment> comments = [];
         for (var doc in snapshot.docs) {
@@ -616,11 +618,11 @@ class PostService {
           }
         }
 
-        print('PostService: Stream returning ${comments.length} top-level comments');
+        debugPrint('PostService: Stream returning ${comments.length} top-level comments');
         return comments;
       });
     } catch (e) {
-      print('Get comments stream error: $e');
+      debugPrint('Get comments stream error: $e');
       throw Exception('Failed to get comments stream');
     }
   }
@@ -628,7 +630,7 @@ class PostService {
   // Get post comments
   Future<List<Comment>> getPostComments(String postId, {int limit = 20}) async {
     try {
-      print('PostService: Loading comments for post: $postId');
+      debugPrint('PostService: Loading comments for post: $postId');
       final QuerySnapshot query = await _firestore
           .collection('posts')
           .doc(postId)
@@ -637,22 +639,22 @@ class PostService {
           .limit(limit)
           .get();
 
-      print('PostService: Found ${query.docs.length} comment documents');
+      debugPrint('PostService: Found ${query.docs.length} comment documents');
       
       final List<Comment> comments = [];
       for (var doc in query.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        print('PostService: Comment data: $data');
+        debugPrint('PostService: Comment data: $data');
         // Only include top-level comments (no replyToCommentId)
         if (data['replyToCommentId'] == null) {
           comments.add(Comment.fromJson(data));
         }
       }
 
-      print('PostService: Returning ${comments.length} top-level comments');
+      debugPrint('PostService: Returning ${comments.length} top-level comments');
       return comments;
     } catch (e) {
-      print('Get comments error: $e');
+      debugPrint('Get comments error: $e');
       throw Exception('Failed to get comments');
     }
   }
@@ -675,7 +677,7 @@ class PostService {
 
       return posts;
     } catch (e) {
-      print('Search posts error: $e');
+      debugPrint('Search posts error: $e');
       throw Exception('Failed to search posts');
     }
   }
@@ -699,7 +701,7 @@ class PostService {
 
       return posts;
     } catch (e) {
-      print('Get trending posts error: $e');
+      debugPrint('Get trending posts error: $e');
       throw Exception('Failed to get trending posts');
     }
   }
@@ -732,7 +734,7 @@ class PostService {
       basePosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return basePosts;
     } catch (e) {
-      print('Get group posts error: $e');
+      debugPrint('Get group posts error: $e');
       return [];
     }
   }
@@ -768,7 +770,7 @@ class PostService {
       results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return results;
     } catch (e) {
-      print('Get posts by IDs error: $e');
+      debugPrint('Get posts by IDs error: $e');
       return [];
     }
   }
@@ -835,10 +837,11 @@ class PostService {
       await batch.commit();
       return postRef.id;
     } catch (e) {
-      print('Create group post error: $e');
+      debugPrint('Create group post error: $e');
       throw Exception('Failed to create group post');
     }
-  }
+  }
+
 
   // Get replies for a parent comment
   Future<List<Comment>> getReplies(String postId, String parentCommentId, {int limit = 50}) async {
@@ -851,12 +854,12 @@ class PostService {
           .orderBy('createdAt', descending: false)
           .limit(limit)
           .get();
-      return query.docs
-          .map((d) => Comment.fromJson(d.data() as Map<String, dynamic>))
-          .toList();
+    return query.docs.map((d) => Comment.fromJson(d.data())).toList();
     } catch (e) {
-      print('Get replies error: ');
+      debugPrint('Get replies error: $e');
       return [];
     }
   }
 }
+
+

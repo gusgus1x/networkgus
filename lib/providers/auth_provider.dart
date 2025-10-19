@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -37,8 +38,9 @@ class AuthProvider with ChangeNotifier {
         notifyListeners();
         return true;
       }
-    } catch (e) {
-      print('Login error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Login error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       _isLoading = false;
       notifyListeners();
     }
@@ -86,8 +88,9 @@ class AuthProvider with ChangeNotifier {
         notifyListeners();
         return true;
       }
-    } catch (e) {
-      print('Signup error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Signup error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       _isLoading = false;
       notifyListeners();
     }
@@ -102,8 +105,9 @@ class AuthProvider with ChangeNotifier {
       if (doc.exists) {
         _currentUser = User.fromMap(doc.data() as Map<String, dynamic>);
       }
-    } catch (e) {
-      print('Error loading user data: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Error loading user data: $e');
+      debugPrintStack(stackTrace: stackTrace);
     }
   }
 
@@ -120,8 +124,9 @@ class AuthProvider with ChangeNotifier {
     try {
       await _firebaseAuth.sendPasswordResetEmail(email: email);
       return true;
-    } catch (e) {
-      print('Password reset error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Password reset error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       return false;
     }
   }
@@ -163,8 +168,9 @@ class AuthProvider with ChangeNotifier {
 
       _isLoading = false;
       notifyListeners();
-    } catch (e) {
-      print('Error updating profile: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Error updating profile: $e');
+      debugPrintStack(stackTrace: stackTrace);
       _isLoading = false;
       notifyListeners();
     }

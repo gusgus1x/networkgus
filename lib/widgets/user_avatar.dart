@@ -54,6 +54,8 @@ class UserAvatar extends StatelessWidget {
   }
 
   Color _getColorFromName(String name) {
+    // Palette intentionally avoids yellow/amber tones to prevent
+    // giving the UI an overall 'yellow' tint. Uses a neutral/cool set.
     final colors = [
       Colors.red.shade400,
       Colors.pink.shade400,
@@ -66,11 +68,11 @@ class UserAvatar extends StatelessWidget {
       Colors.teal.shade400,
       Colors.green.shade400,
       Colors.lightGreen.shade400,
-      Colors.lime.shade400,
-      Colors.yellow.shade400,
-      Colors.amber.shade400,
-      Colors.orange.shade400,
       Colors.deepOrange.shade400,
+      Colors.brown.shade400,
+      Colors.blueGrey.shade400,
+      Colors.grey.shade600,
+      Colors.black87,
     ];
     
     final hash = name.hashCode;

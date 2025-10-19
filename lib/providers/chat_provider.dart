@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
-import 'dart:typed_data';
 import '../models/message_model.dart';
 import '../models/conversation_model.dart';
 import '../services/chat_service.dart';
@@ -13,7 +12,6 @@ class ChatProvider with ChangeNotifier {
   StreamSubscription<List<Conversation>>? _conversationsSubscription;
   bool _isLoading = false;
   String? _activeConversationId;
-  String? _currentUserId;
 
   List<Conversation> get conversations => List.unmodifiable(_conversations);
   bool get isLoading => _isLoading;
@@ -21,10 +19,9 @@ class ChatProvider with ChangeNotifier {
 
   // Start listening to user conversations
   void startListeningToConversations(String userId) {
-    print('ChatProvider: Starting conversations stream for user: $userId');
+  debugPrint('ChatProvider: Starting conversations stream for user: $userId');
     
-    _isLoading = true;
-    _currentUserId = userId;
+  _isLoading = true;
     notifyListeners();
     
     // Cancel existing subscription
@@ -33,19 +30,19 @@ class ChatProvider with ChangeNotifier {
     try {
       _conversationsSubscription = _chatService.getUserConversations(userId).listen(
         (conversations) {
-          print('ChatProvider: Received ${conversations.length} conversations');
+          debugPrint('ChatProvider: Received ${conversations.length} conversations');
           _conversations = conversations;
           _isLoading = false;
           notifyListeners();
         },
         onError: (error) {
-          print('ChatProvider: Error in conversations stream: $error');
+          debugPrint('ChatProvider: Error in conversations stream: $error');
           _isLoading = false;
           notifyListeners();
         },
       );
     } catch (e) {
-      print('ChatProvider: Error starting conversations stream: $e');
+  debugPrint('ChatProvider: Error starting conversations stream: $e');
       _isLoading = false;
       notifyListeners();
     }
@@ -53,14 +50,14 @@ class ChatProvider with ChangeNotifier {
 
   // Stop listening to conversations
   void stopListeningToConversations() {
-    print('ChatProvider: Stopping conversations stream');
+  debugPrint('ChatProvider: Stopping conversations stream');
     _conversationsSubscription?.cancel();
     _conversationsSubscription = null;
   }
 
   // Start listening to messages for a conversation
   void startListeningToMessages(String conversationId) {
-    print('ChatProvider: Starting messages stream for conversation: $conversationId');
+  debugPrint('ChatProvider: Starting messages stream for conversation: $conversationId');
     
     // Cancel existing subscription for this conversation
     _messageSubscriptions[conversationId]?.cancel();
@@ -68,7 +65,7 @@ class ChatProvider with ChangeNotifier {
     try {
       _messageSubscriptions[conversationId] = _chatService.getMessages(conversationId).listen(
         (messages) {
-          print('ChatProvider: Received ${messages.length} messages for conversation: $conversationId');
+          debugPrint('ChatProvider: Received ${messages.length} messages for conversation: $conversationId');
 
           // Current list may contain temporary messages (local optimistic ones)
           final currentMessages = _messages[conversationId] ?? [];
@@ -76,14 +73,14 @@ class ChatProvider with ChangeNotifier {
               msg.id.length > 10 && int.tryParse(msg.id) != null).toList();
 
           // Filter out temp messages that already exist on server (same sender, type, content, image, close timestamp)
-          bool _matches(Message a, Message b) {
+          bool matches(Message a, Message b) {
             final aImg = a.metadata != null ? a.metadata!['imageUrl'] as String? : null;
             final bImg = b.metadata != null ? b.metadata!['imageUrl'] as String? : null;
             final sameCore = a.senderId == b.senderId && a.type == b.type && a.content == b.content && aImg == bImg;
             final closeTime = (a.timestamp.difference(b.timestamp)).abs() <= const Duration(seconds: 15);
             return sameCore && closeTime;
           }
-          final filteredTemps = tempMessages.where((t) => !messages.any((m) => _matches(t, m))).toList();
+          final filteredTemps = tempMessages.where((t) => !messages.any((m) => matches(t, m))).toList();
 
           // Combine Firebase messages (authoritative) with any remaining temps
           final combined = [...messages, ...filteredTemps];
@@ -104,7 +101,7 @@ class ChatProvider with ChangeNotifier {
           notifyListeners();
         },
         onError: (error) {
-          print('ChatProvider: Error in messages stream for conversation $conversationId: $error');
+          debugPrint('ChatProvider: Error in messages stream for conversation $conversationId: $error');
           // Try one-shot fallback without orderBy to avoid index requirement
           _chatService.fetchMessagesNoOrder(conversationId).then((fallback) {
             if (fallback.isNotEmpty) {
@@ -115,13 +112,13 @@ class ChatProvider with ChangeNotifier {
         },
       );
     } catch (e) {
-      print('ChatProvider: Error starting messages stream for conversation $conversationId: $e');
+      debugPrint('ChatProvider: Error starting messages stream for conversation $conversationId: $e');
     }
   }
 
   // Stop listening to messages for a conversation
   void stopListeningToMessages(String conversationId) {
-    print('ChatProvider: Stopping messages stream for conversation: $conversationId');
+  debugPrint('ChatProvider: Stopping messages stream for conversation: $conversationId');
     _messageSubscriptions[conversationId]?.cancel();
     _messageSubscriptions.remove(conversationId);
   }
@@ -216,7 +213,7 @@ class ChatProvider with ChangeNotifier {
       // Remove the temporary message if sending failed
       _messages[conversationId]?.remove(tempMessage);
       notifyListeners();
-      print('ChatProvider: Error sending message: $e');
+  debugPrint('ChatProvider: Error sending message: $e');
       throw Exception('Failed to send message');
     }
   }
@@ -229,7 +226,7 @@ class ChatProvider with ChangeNotifier {
         userId2: userId2,
       );
     } catch (e) {
-      print('ChatProvider: Error creating conversation: $e');
+      debugPrint('ChatProvider: Error creating conversation: $e');
       throw Exception('Failed to create conversation');
     }
   }
@@ -248,7 +245,7 @@ class ChatProvider with ChangeNotifier {
       );
       return id;
     } catch (e) {
-      print('ChatProvider: Error creating group: $e');
+      debugPrint('ChatProvider: Error creating group: $e');
       throw Exception('Failed to create group');
     }
   }
@@ -264,7 +261,7 @@ class ChatProvider with ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('ChatProvider: Error updating group name: $e');
+      debugPrint('ChatProvider: Error updating group name: $e');
       rethrow;
     }
   }
@@ -285,7 +282,7 @@ class ChatProvider with ChangeNotifier {
       }
       return url;
     } catch (e) {
-      print('ChatProvider: Error updating group image: $e');
+      debugPrint('ChatProvider: Error updating group image: $e');
       throw Exception('Failed to update group image');
     }
   }
@@ -295,7 +292,7 @@ class ChatProvider with ChangeNotifier {
     try {
       await _chatService.markMessagesAsRead(conversationId, userId);
     } catch (e) {
-      print('ChatProvider: Error marking messages as read: $e');
+      debugPrint('ChatProvider: Error marking messages as read: $e');
     }
   }
 

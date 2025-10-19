@@ -262,7 +262,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               final next = post.userReaction == dislikeEmoji ? null : dislikeEmoji;
               await context.read<PostsProvider>().setReaction(postId: post.id, userId: uid, emoji: next);
             },
-            icon: Icon(post.userReaction == dislikeEmoji ? Icons.thumb_down_alt : Icons.thumb_down_alt_outlined, color: post.userReaction == dislikeEmoji ? Colors.amber : Colors.white, size: 22),
+            icon: Icon(post.userReaction == dislikeEmoji ? Icons.thumb_down_alt : Icons.thumb_down_alt_outlined, color: post.userReaction == dislikeEmoji ? Theme.of(context).colorScheme.primary : Colors.white, size: 22),
           ),
           const SizedBox(width: 8),
           IconButton(

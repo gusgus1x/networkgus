@@ -1,5 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
 
 class AuthService {
@@ -24,8 +25,9 @@ class AuthService {
         return await getUserData(result.user!.uid);
       }
       return null;
-    } catch (e) {
-      print('Sign in error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Sign in error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw _handleAuthException(e);
     }
   }
@@ -69,8 +71,9 @@ class AuthService {
         return newUser;
       }
       return null;
-    } catch (e) {
-      print('Sign up error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Sign up error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw _handleAuthException(e);
     }
   }
@@ -79,8 +82,9 @@ class AuthService {
   Future<void> signOut() async {
     try {
       await _firebaseAuth.signOut();
-    } catch (e) {
-      print('Sign out error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Sign out error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to sign out');
     }
   }
@@ -93,8 +97,9 @@ class AuthService {
         return User.fromMap(doc.data() as Map<String, dynamic>);
       }
       return null;
-    } catch (e) {
-      print('Get user data error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Get user data error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to get user data');
     }
   }
@@ -116,8 +121,9 @@ class AuthService {
       if (updateData.isNotEmpty) {
         await _firestore.collection('users').doc(uid).update(updateData);
       }
-    } catch (e) {
-      print('Update profile error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Update profile error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to update profile');
     }
   }
@@ -131,8 +137,9 @@ class AuthService {
           .limit(1)
           .get();
       return result.docs.isNotEmpty;
-    } catch (e) {
-      print('Check username error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Check username error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       return false;
     }
   }
@@ -168,8 +175,9 @@ class AuthService {
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await _firebaseAuth.sendPasswordResetEmail(email: email);
-    } catch (e) {
-      print('Password reset error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Password reset error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw _handleAuthException(e);
     }
   }
@@ -179,13 +187,14 @@ class AuthService {
     try {
       final user = _firebaseAuth.currentUser;
       if (user != null) {
-        await user.updateEmail(newEmail);
+        await user.verifyBeforeUpdateEmail(newEmail);
         await _firestore.collection('users').doc(user.uid).update({
           'email': newEmail,
         });
       }
-    } catch (e) {
-      print('Update email error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Update email error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw _handleAuthException(e);
     }
   }
@@ -197,8 +206,9 @@ class AuthService {
       if (user != null) {
         await user.updatePassword(newPassword);
       }
-    } catch (e) {
-      print('Update password error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Update password error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw _handleAuthException(e);
     }
   }
@@ -214,8 +224,9 @@ class AuthService {
         );
         await user.reauthenticateWithCredential(credential);
       }
-    } catch (e) {
-      print('Reauthenticate error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Reauthenticate error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw _handleAuthException(e);
     }
   }

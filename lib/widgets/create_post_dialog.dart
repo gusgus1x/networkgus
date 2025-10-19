@@ -9,7 +9,6 @@ import '../providers/posts_provider.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../services/cloudinary_service.dart';
 import '../providers/auth_provider.dart';
-import '../providers/group_provider.dart';
 
 enum ComposerAction { none, image, video }
 

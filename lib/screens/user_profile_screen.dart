@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
@@ -31,14 +30,12 @@ class UserProfileScreen extends StatefulWidget {
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
   User? _user;
-  List<Post> _userPosts = [];
   bool _isLoading = true;
   bool _isLoadingPosts = true;
   bool _isFollowing = false;
   bool _isFollowingLoading = false;
   String? _actualUserId; // Will be set in initState
   bool _isUploadingAvatar = false;
-  String? _pendingProfileImageUrl; // holds latest uploaded avatar until saved
 
   @override
   void initState() {
@@ -105,22 +102,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Future<void> _loadUserPosts() async {
     if (_actualUserId == null) return;
-    
+
+    if (mounted) {
+      setState(() => _isLoadingPosts = true);
+    }
+
     try {
-      final postsProvider = context.read<PostsProvider>();
-      final posts = await postsProvider.getUserPosts(_actualUserId!);
-      
+      await context.read<PostsProvider>().getUserPosts(_actualUserId!);
+    } finally {
       if (mounted) {
-        setState(() {
-          _userPosts = posts;
-          _isLoadingPosts = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoadingPosts = false;
-        });
+        setState(() => _isLoadingPosts = false);
       }
     }
   }
@@ -138,8 +129,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           _isFollowing = isFollowing;
         });
       }
-    } catch (e) {
-      print('Error checking follow status: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Error checking follow status: $e');
+      debugPrintStack(stackTrace: stackTrace);
     }
   }
 
@@ -671,7 +663,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 );
                 Navigator.pop(dialogContext);
                 _loadUserProfile();
-                _pendingProfileImageUrl = null;
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Failed to update profile: $e')),
@@ -695,7 +686,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     try {
       setState(() => _isUploadingAvatar = true);
 
-      Uint8List? bytes;
+      late final Uint8List bytes;
       String filename = 'avatar.jpg';
 
       if (kIsWeb) {
@@ -725,13 +716,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       }
 
       final cloudinary = CloudinaryService(folder: 'networkgus/avatars');
-      final url = await cloudinary.uploadImageBytes(bytes!, filename: filename);
+  final url = await cloudinary.uploadImageBytes(bytes, filename: filename);
 
       await context.read<AuthProvider>().updateProfile(profileImageUrl: url);
       if (mounted) {
         setState(() {
           _user = _user?.copyWith(profileImageUrl: url);
-          _pendingProfileImageUrl = url;
         });
       }
 

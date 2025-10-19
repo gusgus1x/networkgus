@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import '../models/message_model.dart';
 import '../models/conversation_model.dart';
@@ -66,8 +67,9 @@ class ChatService {
       }
 
       return conversationId;
-    } catch (e) {
-      print('Create conversation error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Create conversation error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to create conversation');
     }
   }
@@ -123,8 +125,9 @@ class ChatService {
 
       await convoRef.set(data);
       return convoRef.id;
-    } catch (e) {
-      print('Create group conversation error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Create group conversation error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to create group');
     }
   }
@@ -133,8 +136,9 @@ class ChatService {
   Future<void> updateGroupName(String conversationId, String name) async {
     try {
       await _conversationsCollection.doc(conversationId).update({'name': name});
-    } catch (e) {
-      print('Update group name error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Update group name error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to update group name');
     }
   }
@@ -148,8 +152,9 @@ class ChatService {
       final filename = 'group_${conversationId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final url = await _cloudinary.uploadImageBytes(bytes, filename: filename);
       return url;
-    } catch (e) {
-      print('Upload group image error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Upload group image error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to upload group image');
     }
   }
@@ -158,8 +163,9 @@ class ChatService {
   Future<void> setGroupImageUrl(String conversationId, String imageUrl) async {
     try {
       await _conversationsCollection.doc(conversationId).update({'imageUrl': imageUrl});
-    } catch (e) {
-      print('Set group image URL error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Set group image URL error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to set group image');
     }
   }
@@ -218,8 +224,9 @@ class ChatService {
 
       await batch.commit();
       return messageRef.id;
-    } catch (e) {
-      print('Send message error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Send message error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to send message');
     }
   }
@@ -236,8 +243,9 @@ class ChatService {
       final filename = 'chat_${conversationId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final url = await _cloudinary.uploadImageBytes(bytes, filename: filename);
       return url;
-    } catch (e) {
-      print('Upload chat image error (Cloudinary): $e');
+    } catch (e, stackTrace) {
+      debugPrint('Upload chat image error (Cloudinary): $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to upload image to Cloudinary');
     }
   }
@@ -264,8 +272,9 @@ class ChatService {
       }).toList();
 
       return messages;
-    } catch (e) {
-      print('Fetch latest messages error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Fetch latest messages error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       return [];
     }
   }
@@ -292,8 +301,9 @@ class ChatService {
 
       messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
       return messages;
-    } catch (e) {
-      print('Fetch messages (no order) error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Fetch messages (no order) error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       return [];
     }
   }
@@ -421,8 +431,9 @@ class ChatService {
       });
 
       await batch.commit();
-    } catch (e) {
-      print('Mark messages as read error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Mark messages as read error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to mark messages as read');
     }
   }
@@ -462,8 +473,9 @@ class ChatService {
           'lastMessageSenderId': '',
         });
       }
-    } catch (e) {
-      print('Delete message error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Delete message error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to delete message');
     }
   }
@@ -483,8 +495,9 @@ class ChatService {
       // Remove the conversation document itself
       batch.delete(_conversationsCollection.doc(conversationId));
       await batch.commit();
-    } catch (e) {
-      print('Delete conversation error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Delete conversation error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to delete conversation');
     }
   }
@@ -544,8 +557,9 @@ class ChatService {
         final last = c.lastMessage?.content.toLowerCase() ?? '';
         return name.contains(q) || last.contains(q);
       }).toList();
-    } catch (e) {
-      print('Search conversations error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Search conversations error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to search conversations');
     }
   }
@@ -575,8 +589,9 @@ class ChatService {
       }
 
       return totalUnreadCount;
-    } catch (e) {
-      print('Get unread count error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Get unread count error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       return 0;
     }
   }
@@ -603,8 +618,9 @@ class ChatService {
         'isOnline': isOnline,
         'lastSeen': FieldValue.serverTimestamp(),
       });
-    } catch (e) {
-      print('Update online status error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Update online status error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to update online status');
     }
   }
@@ -640,8 +656,9 @@ class ChatService {
         'conversation': conversation,
         'otherUser': otherUserInfo,
       };
-    } catch (e) {
-      print('Get conversation info error: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Get conversation info error: $e');
+      debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to get conversation info');
     }
   }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
@@ -13,7 +12,6 @@ import '../providers/posts_provider.dart';
 import '../screens/post_detail_screen.dart';
 import '../screens/user_profile_screen.dart';
 import '../widgets/user_avatar.dart';
-import '../widgets/edit_post_dialog.dart';
 import '../widgets/post_video.dart';
 
 class PostCard extends StatelessWidget {
@@ -24,9 +22,8 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final onSurface = theme.colorScheme.onSurface;
-    final borderColor = theme.dividerColor;
+  final theme = Theme.of(context);
+  final borderColor = theme.dividerColor;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -91,13 +88,7 @@ class PostCard extends StatelessWidget {
               icon: Icon(Icons.more_vert, size: 20, color: Theme.of(ctx).colorScheme.onSurface),
               onSelected: (value) async {
                 if (value == 'edit') {
-                  final updated = await showDialog<bool>(
-                    context: ctx,
-                    builder: (_) => EditPostDialog(post: post),
-                  );
-                  if (updated == true && ctx.mounted) {
-                    ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Post updated')));
-                  }
+                  await _showEditDialog(ctx);
                 } else if (value == 'delete') {
                   await _confirmDelete(ctx);
                 }
@@ -332,7 +323,6 @@ class PostCard extends StatelessWidget {
           padding: EdgeInsets.only(bottom: bottom),
           child: StatefulBuilder(
             builder: (ctx, setState) {
-              final theme = Theme.of(ctx);
               final changed = controller.text != post.content || !_listsEqual(imageUrls, post.imageUrls ?? const []);
               final count = controller.text.length;
 
