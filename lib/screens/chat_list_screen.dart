@@ -163,7 +163,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.edit_rounded, size: 22),
+                    icon: const Icon(Icons.chat_bubble_rounded, size: 22),
                     onPressed: () => _showNewChatDialog(),
                     color: theme.colorScheme.onSurface,
                     tooltip: 'New conversation',
@@ -462,12 +462,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showNewChatDialog(),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        child: const Icon(Icons.edit_rounded),
-      ),
+      // Removed compose FAB per request
     );
   }
 

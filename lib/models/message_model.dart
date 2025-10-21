@@ -80,6 +80,7 @@ class Message {
 enum MessageType {
   text,
   image,
+  video,
   file,
   emoji,
   system,

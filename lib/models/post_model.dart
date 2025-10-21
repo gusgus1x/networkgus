@@ -6,6 +6,7 @@ class Post {
   final String content;
   final List<String>? imageUrls;
   final String? videoUrl; // เพิ่ม field วิดีโอ
+  final String? audioUrl; // เพิ่ม field เสียง (mp3)
   final DateTime createdAt;
   final DateTime? updatedAt;
   final int likesCount;
@@ -27,6 +28,7 @@ class Post {
   required this.content,
   this.imageUrls,
   this.videoUrl,
+  this.audioUrl,
   required this.createdAt,
   this.updatedAt,
   this.likesCount = 0,
@@ -60,6 +62,7 @@ class Post {
       ? List<String>.from(json['imageUrls']) 
       : null,
     videoUrl: json['videoUrl'],
+    audioUrl: json['audioUrl'],
       createdAt: parseDate(json['createdAt']),
       updatedAt: json['updatedAt'] != null 
           ? parseDate(json['updatedAt']) 
@@ -100,6 +103,7 @@ class Post {
   'isUserVerified': isUserVerified,
   'groupId': groupId,
   'videoUrl': videoUrl,
+  'audioUrl': audioUrl,
     };
   }
 
@@ -121,8 +125,10 @@ class Post {
   bool? isUserVerified,
   String? groupId,
   String? videoUrl,
+  String? audioUrl,
   Map<String, int>? reactionCounts,
   String? userReaction,
+  bool userReactionCleared = false,
   }) {
     return Post(
       id: id ?? this.id,
@@ -142,8 +148,9 @@ class Post {
   isUserVerified: isUserVerified ?? this.isUserVerified,
   groupId: groupId ?? this.groupId,
   videoUrl: videoUrl ?? this.videoUrl,
+  audioUrl: audioUrl ?? this.audioUrl,
   reactionCounts: reactionCounts ?? this.reactionCounts,
-  userReaction: userReaction ?? this.userReaction,
+  userReaction: userReactionCleared ? null : (userReaction ?? this.userReaction),
     );
   }
 }

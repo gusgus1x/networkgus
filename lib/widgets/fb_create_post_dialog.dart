@@ -1,8 +1,7 @@
-import 'dart:io';
+import 'dart:io' show File, Platform;
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -29,7 +28,7 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
 
   bool _isPosting = false;
 
-  // Non-web
+  // Non‑web
   List<File> _selectedImages = [];
   File? _selectedVideo;
   // Web
@@ -71,11 +70,9 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
     setState(() => _isPosting = true);
 
     try {
-      final authProvider = context.read<AuthProvider>();
-      final currentUser = authProvider.currentUser;
-      if (currentUser == null) {
-        throw Exception('No user logged in');
-      }
+      final auth = context.read<AuthProvider>();
+      final currentUser = auth.currentUser;
+      if (currentUser == null) throw Exception('No user logged in');
 
       List<String>? uploadedImageUrls;
       String? uploadedVideoUrl;
@@ -88,9 +85,7 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
         }
       }
 
-      await context
-          .read<PostsProvider>()
-          .createPost(
+      await context.read<PostsProvider>().createPost(
             content: content,
             userId: currentUser.id,
             userDisplayName: currentUser.displayName,
@@ -103,29 +98,25 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
             videoFile: !kIsWeb ? _selectedVideo : null,
             videoUrl: kIsWeb ? uploadedVideoUrl : null,
             refreshAfterCreate: false,
-          )
-          .timeout(const Duration(seconds: 20));
+          ).timeout(const Duration(seconds: 20));
 
       if (widget.groupId != null && widget.groupId!.isNotEmpty) {
         Future(() async {
-          final auth = context.read<AuthProvider>();
-          final uid = auth.currentUser?.id;
+          final uid = context.read<AuthProvider>().currentUser?.id;
           await context.read<PostsProvider>().fetchGroupPosts(widget.groupId!, currentUserId: uid);
         });
       }
 
-      if (mounted) {
-        Navigator.of(context, rootNavigator: false).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post created successfully!'), backgroundColor: Colors.green),
-        );
-      }
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: false).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Post created successfully!'), backgroundColor: Colors.green),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to post: $e')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to post: $e')),
+      );
     } finally {
       if (mounted) setState(() => _isPosting = false);
     }
@@ -152,9 +143,8 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
         }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Select images failed: $e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Select images failed: $e')));
     }
   }
 
@@ -178,9 +168,8 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
         }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Select video failed: $e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Select video failed: $e')));
     }
   }
 
@@ -195,11 +184,9 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
   }
 
   Future<String> _uploadVideoWeb(Uint8List bytes) async {
-    final storage = FirebaseStorage.instance;
+    final cloudinary = CloudinaryService();
     final name = '${DateTime.now().millisecondsSinceEpoch}_video.mp4';
-    final ref = storage.ref().child('posts/videos').child(name);
-    final snap = await ref.putData(bytes, SettableMetadata(contentType: 'video/mp4'));
-    return await snap.ref.getDownloadURL();
+    return await cloudinary.uploadVideoBytes(bytes, filename: name);
   }
 
   int _imagesCount() => kIsWeb ? _selectedImageBytes.length : _selectedImages.length;
@@ -225,130 +212,125 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
                 maxWidth: isWide ? 720 : 520,
                 maxHeight: media.size.height * 0.85,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // header
-                  Stack(
-                    children: [
-                      Align(
-                        alignment: Alignment.center,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Text('Create post', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // user row + audience
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundImage: (currentUser?.profileImageUrl != null && currentUser!.profileImageUrl!.isNotEmpty)
-                            ? NetworkImage(currentUser.profileImageUrl!)
-                            : null,
-                        child: (currentUser?.profileImageUrl == null || currentUser!.profileImageUrl!.isEmpty)
-                            ? Text(firstName.substring(0, 1).toUpperCase())
-                            : null,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(displayName, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 4),
-                            // Audience selector removed per request
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  // composer area
-                  Flexible(
-                    child: TextField(
-                      controller: _contentController,
-                      decoration: InputDecoration(
-                        hintText: "What's on your mind, $firstName?",
-                        border: InputBorder.none,
-                        hintStyle: theme.textTheme.titleMedium?.copyWith(color: Colors.grey.shade500),
-                        isCollapsed: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      onChanged: (_) => setState(() {}),
-                      style: theme.textTheme.titleMedium?.copyWith(height: 1.4),
-                      minLines: 4,
-                      maxLines: 10,
-                      maxLength: 500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  if ((!kIsWeb && _selectedImages.isNotEmpty) || (kIsWeb && _selectedImageBytes.isNotEmpty)) _buildImagesGrid(),
-                  if ((!kIsWeb && _selectedVideo != null) || (kIsWeb && _selectedVideoBytes != null)) _buildVideoChip(),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        decoration:
-                            BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF8A2BE2), Color(0xFF00D4FF)]), borderRadius: BorderRadius.circular(8)),
-                        child: const Text('Aa', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                      ),
-                      IconButton(tooltip: 'Emoji', icon: const Icon(Icons.emoji_emotions_outlined), onPressed: () {}),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceVariant.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade800, width: 0.5),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    child: Row(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // header
+                    Stack(
                       children: [
-                        Text(
-                          'Add to your post',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey.shade300,
-                            fontWeight: FontWeight.w600,
+                        Align(
+                          alignment: Alignment.center,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text('Create post', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                           ),
                         ),
-                        const Spacer(),
-                        // Compact icon row: image + video
-                        IconButton(
-                          tooltip: 'Add image',
-                          icon: const Icon(Icons.image_outlined, color: Colors.green),
-                          onPressed: _pickImages,
-                        ),
-                        IconButton(
-                          tooltip: 'Add video',
-                          icon: const Icon(Icons.videocam_outlined, color: Colors.redAccent),
-                          onPressed: _pickVideo,
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _isPosting || !_canPost ? null : _createPost,
-                      child: _isPosting
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Text('Post'),
+                    const SizedBox(height: 8),
+                    // user row
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundImage: (currentUser?.profileImageUrl != null && currentUser!.profileImageUrl!.isNotEmpty)
+                              ? NetworkImage(currentUser.profileImageUrl!)
+                              : null,
+                          child: (currentUser?.profileImageUrl == null || currentUser!.profileImageUrl!.isEmpty)
+                              ? Text(firstName.substring(0, 1).toUpperCase())
+                              : null,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(displayName, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    // composer
+                    ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: 96, maxHeight: isWide ? 240 : 200),
+                      child: TextField(
+                        controller: _contentController,
+                        decoration: InputDecoration(
+                          hintText: "What's on your mind, $firstName?",
+                          border: InputBorder.none,
+                          hintStyle: theme.textTheme.titleMedium?.copyWith(color: Colors.grey.shade500),
+                          isCollapsed: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        onChanged: (_) => setState(() {}),
+                        style: theme.textTheme.titleMedium?.copyWith(height: 1.4),
+                        minLines: 4,
+                        maxLines: 10,
+                        maxLength: 500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if ((!kIsWeb && _selectedImages.isNotEmpty) || (kIsWeb && _selectedImageBytes.isNotEmpty)) _buildImagesGrid(),
+                    if ((!kIsWeb && _selectedVideo != null) || (kIsWeb && _selectedVideoBytes != null)) _buildVideoChip(),
+                    const SizedBox(height: 8),
+                    // toolbar
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [Color(0xFF8A2BE2), Color(0xFF00D4FF)]),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text('Aa', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceVariant.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade800, width: 0.5),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                tooltip: 'Add image',
+                                icon: const Icon(Icons.image_outlined, color: Colors.green),
+                                onPressed: _pickImages,
+                              ),
+                              IconButton(
+                                tooltip: 'Add video',
+                                icon: const Icon(Icons.videocam_outlined, color: Colors.redAccent),
+                                onPressed: _pickVideo,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isPosting || !_canPost ? null : _createPost,
+                        child: _isPosting
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Text('Post'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -442,3 +424,4 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
     );
   }
 }
+

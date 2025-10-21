@@ -387,7 +387,11 @@ class PostsProvider with ChangeNotifier {
       if (emoji != null && emoji.isNotEmpty) {
         newMap[emoji] = (newMap[emoji] ?? 0) + 1;
       }
-      list[i] = list[i].copyWith(reactionCounts: newMap, userReaction: emoji);
+      list[i] = list[i].copyWith(
+        reactionCounts: newMap,
+        userReaction: emoji,
+        userReactionCleared: emoji == null,
+      );
     }
 
     // optimistic update

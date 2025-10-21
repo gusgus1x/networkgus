@@ -37,6 +37,8 @@ class _ChatScreenState extends State<ChatScreen> {
   // Pending media to send with optional caption
   Uint8List? _pendingImageBytes;
   String? _pendingImageName;
+  Uint8List? _pendingVideoBytes;
+  String? _pendingVideoName;
   // Cache sender info for avatars/names
   final Map<String, String?> _userAvatarCache = {};
   final Map<String, String> _userNameCache = {};
@@ -131,22 +133,6 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: Text(resolvedTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.videocam),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Video call not implemented yet')),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.call),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Voice call not implemented yet')),
-              );
-            },
-          ),
           PopupMenuButton(
             onSelected: (value) {
               switch (value) {
@@ -278,6 +264,27 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Future<void> _refreshChat() async {
+    try {
+      final auth = context.read<AuthProvider>().user;
+      await context.read<ChatProvider>().preloadMessages(widget.conversationId);
+      if (auth?.uid != null) {
+        await context.read<ChatProvider>().markAsRead(widget.conversationId, auth!.uid);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chat refreshed'), duration: Duration(milliseconds: 600)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Refresh failed: $e')),
+        );
+      }
+    }
+  }
+
   Widget _buildDateSeparator(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -361,6 +368,49 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
           ],
+          if (_pendingVideoBytes != null) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.black12,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Icon(Icons.videocam, color: Colors.redAccent),
+                  ),
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: 160,
+                    child: Text(
+                      _pendingVideoName ?? 'video.mp4',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(() {
+                      _pendingVideoBytes = null;
+                      _pendingVideoName = null;
+                    }),
+                  ),
+                ],
+              ),
+            ),
+          ],
           Row(
             children: [
               IconButton(
@@ -373,7 +423,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: TextField(
                   controller: _messageController,
                   decoration: InputDecoration(
-                    hintText: (_pendingImageBytes != null) ? 'Add a caption...' : 'Type a message...',
+                    // If either image or video is pending, show caption hint
+                    hintText: (_pendingImageBytes != null || _pendingVideoBytes != null)
+                        ? 'Add a caption...'
+                        : 'Type a message...',
                     hintStyle: const TextStyle(color: Colors.white54),
                     filled: true,
                     fillColor: const Color(0xFF2A2A2A),
@@ -508,10 +561,18 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_library, color: Colors.purple),
-              title: const Text('Photo & Video Library'),
+              title: const Text('Photo Library'),
               onTap: () {
                 Navigator.pop(context);
                 _pickImageForMessage();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam, color: Colors.redAccent),
+              title: const Text('Video'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickVideoForMessage();
               },
             ),
             ListTile(
@@ -571,6 +632,33 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _pickVideoForMessage() async {
+    try {
+      Uint8List? videoBytes;
+      if (kIsWeb) {
+        final x = await _picker.pickVideo(source: ImageSource.gallery, maxDuration: const Duration(minutes: 5));
+        if (x == null) return;
+        videoBytes = await x.readAsBytes();
+        setState(() {
+          _pendingVideoBytes = videoBytes;
+          _pendingVideoName = x.name;
+        });
+      } else {
+        final res = await FilePicker.platform.pickFiles(type: FileType.video, allowMultiple: false, withData: true);
+        if (res == null || res.files.single.bytes == null) return;
+        videoBytes = res.files.single.bytes!;
+        setState(() {
+          _pendingVideoBytes = videoBytes;
+          _pendingVideoName = res.files.single.name;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to send video: $e')));
+      }
+    }
+  }
+
   Future<void> _sendPendingOrText() async {
     try {
       final authProvider = context.read<AuthProvider>();
@@ -615,6 +703,34 @@ class _ChatScreenState extends State<ChatScreen> {
           _pendingImageBytes = null;
           _pendingImageName = null;
         });
+      } else if (_pendingVideoBytes != null) {
+        final chatService = ChatService();
+        final videoUrl = await chatService.uploadChatVideo(
+          conversationId: widget.conversationId,
+          bytes: _pendingVideoBytes!,
+        );
+
+        final caption = _messageController.text.trim();
+        _messageController.clear();
+
+        await context.read<ChatProvider>().sendMessage(
+              widget.conversationId,
+              caption,
+              currentUser.uid,
+              targetUserId,
+              type: MessageType.video,
+              videoUrl: videoUrl,
+            );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Video sent'), duration: Duration(milliseconds: 800)),
+          );
+        }
+
+        setState(() {
+          _pendingVideoBytes = null;
+          _pendingVideoName = null;
+        });
       } else {
         // Text message
         await _sendMessage();
@@ -639,9 +755,9 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             Text('Chat Information:'),
             SizedBox(height: 8),
-            Text('• Messages are end-to-end encrypted'),
-            Text('• Media is automatically downloaded'),
-            Text('• Chat backup is enabled'),
+            Text('เน€เธโฌเน€เธยเธขยเน€เธยเธขยเน€เธยเน€เธโฌเน€เธยเธขย Messages are end-to-end encrypted'),
+            Text('เน€เธโฌเน€เธยเธขยเน€เธยเธขยเน€เธยเน€เธโฌเน€เธยเธขย Media is automatically downloaded'),
+            Text('เน€เธโฌเน€เธยเธขยเน€เธยเธขยเน€เธยเน€เธโฌเน€เธยเธขย Chat backup is enabled'),
           ],
         ),
         actions: [

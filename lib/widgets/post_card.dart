@@ -84,6 +84,7 @@ class PostCard extends StatelessWidget {
           Builder(builder: (ctx) {
             final currentUserId = Provider.of<AuthProvider>(ctx, listen: false).currentUser?.id;
             final isOwner = currentUserId != null && currentUserId == post.userId;
+            if (!isOwner) return const SizedBox.shrink();
             return PopupMenuButton<String>(
               icon: Icon(Icons.more_vert, size: 20, color: Theme.of(ctx).colorScheme.onSurface),
               onSelected: (value) async {
@@ -93,18 +94,10 @@ class PostCard extends StatelessWidget {
                   await _confirmDelete(ctx);
                 }
               },
-              itemBuilder: (_) {
-                if (isOwner) {
-                  return const [
-                    PopupMenuItem(value: 'edit', child: Text('Edit')),
-                    PopupMenuItem(value: 'delete', child: Text('Delete')),
-                  ];
-                } else {
-                  return const [
-                    PopupMenuItem(value: 'hide', child: Text('Hide')),
-                  ];
-                }
-              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(value: 'delete', child: Text('Delete')),
+              ],
             );
           }),
         ],

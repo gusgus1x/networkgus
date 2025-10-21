@@ -280,9 +280,11 @@ class _ConversationTileState extends State<ConversationTile> {
       case MessageType.text:
         return lastMessage.content;
       case MessageType.image:
-        return '?? Photo';
+        return '📷 Photo';
+      case MessageType.video:
+        return '🎥 Video';
       case MessageType.file:
-        return '?? File';
+        return '📎 File';
       case MessageType.emoji:
         return lastMessage.content;
       case MessageType.system:

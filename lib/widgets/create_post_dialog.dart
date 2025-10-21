@@ -231,14 +231,9 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
   }
 
   Future<String> _uploadVideoWeb(Uint8List bytes) async {
-    final storage = FirebaseStorage.instance;
+    final cloudinary = CloudinaryService();
     final name = '${DateTime.now().millisecondsSinceEpoch}_video.mp4';
-    final ref = storage.ref().child('posts/videos').child(name);
-    final snap = await ref.putData(
-      bytes,
-      SettableMetadata(contentType: 'video/mp4'),
-    );
-    return await snap.ref.getDownloadURL();
+    return await cloudinary.uploadVideoBytes(bytes, filename: name);
   }
 
   @override
@@ -258,7 +253,10 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                 // let it grow a bit taller for better composing
                 maxHeight: media.size.height * 0.85,
               ),
-              child: Column(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -274,7 +272,11 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                   ),
                   const SizedBox(height: 8),
                   // Composer
-                  Flexible(
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: 96,
+                      maxHeight: isWide ? 240 : 200,
+                    ),
                     child: TextField(
                       controller: _contentController,
                       decoration: const InputDecoration(
@@ -284,7 +286,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                       ),
                       onChanged: (_) => setState(() {}),
                       minLines: 4,
-                      maxLines: 8,
+                      maxLines: 10,
                       maxLength: 500,
                     ),
                   ),
@@ -346,6 +348,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                   ),
                 ],
               ),
+            ),
             ),
           ),
           if (_isPosting)

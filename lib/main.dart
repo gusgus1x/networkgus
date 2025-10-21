@@ -8,6 +8,7 @@ import 'providers/user_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/group_provider.dart';
 import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
 import 'providers/theme_provider.dart';
 
@@ -99,6 +100,7 @@ class MyApp extends StatelessWidget {
         home: const AppWrapper(),
         routes: {
           '/login': (context) => const LoginScreen(),
+          '/register': (context) => const RegisterScreen(),
           '/home': (context) => const HomeScreen(),
         },
       ),

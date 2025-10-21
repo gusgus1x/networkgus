@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/message_model.dart';
 import 'user_avatar.dart';
+import 'post_video.dart';
 
 class MessageBubble extends StatelessWidget {
   final Message message;
@@ -107,7 +108,7 @@ class MessageBubble extends StatelessWidget {
               radius: 16,
             )
           else if (isMe)
-            const SizedBox(width: 32),
+            const SizedBox(width: 0),
         ],
       ),
     );
@@ -142,6 +143,24 @@ class MessageBubble extends StatelessWidget {
                         child: Icon(Icons.image, size: 48, color: Colors.grey),
                       ),
                     ),
+            ),
+            if (message.content.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(message.content, style: TextStyle(color: isMe ? Colors.white : otherTextColor, fontSize: 16)),
+            ],
+          ],
+        );
+      case MessageType.video:
+        final videoUrl = message.metadata != null ? message.metadata!['videoUrl'] as String? : null;
+        if (videoUrl == null) {
+          return const SizedBox.shrink();
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: PostVideo(url: videoUrl, maxHeight: 220),
             ),
             if (message.content.isNotEmpty) ...[
               const SizedBox(height: 8),

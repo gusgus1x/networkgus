@@ -46,6 +46,7 @@ dependencies:
   file_picker: ^8.0.0
   # Video playback for post videos
   video_player: ^2.9.2
+  # Audio playback for mp3 posts
   
   # Additional utilities
   intl: ^0.19.0

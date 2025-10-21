@@ -13,21 +13,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isSignUp = false;
-  final _displayNameController = TextEditingController();
-  final _usernameController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
 
   bool _passwordObscured = true;
-  bool _confirmPasswordObscured = true;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _displayNameController.dispose();
-    _usernameController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -36,33 +28,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authProvider = context.read<AuthProvider>();
-      bool success;
-
-      if (_isSignUp) {
-        success = await authProvider.signUp(
-          _emailController.text.trim(),
-          _passwordController.text,
-          _displayNameController.text.trim(),
-          _usernameController.text.trim(),
-        );
-      } else {
-        success = await authProvider.login(
-          _emailController.text.trim(),
-          _passwordController.text,
-        );
-      }
+      final success = await authProvider.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
 
       if (success && mounted) {
         // Navigation is handled automatically by AppWrapper when auth state changes
         return;
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_isSignUp ? 'Sign up failed. Please try again.' : 'Login failed. Please check your credentials.'),
+          const SnackBar(
+            content: Text('Login failed. Please check your credentials.'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            margin: EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
           ),
         );
       }
@@ -100,11 +81,16 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: SafeArea(
           child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(32.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+                return Padding(
+                  padding: EdgeInsets.fromLTRB(32, 32, 32, 32 + bottomInset),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
                   // Logo
                   Container(
                     padding: const EdgeInsets.all(24),
@@ -175,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            _isSignUp ? 'Create Account' : 'Welcome Back',
+                            'Welcome Back',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -184,9 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            _isSignUp 
-                                ? 'Sign up to see photos and videos from your friends.' 
-                                : 'Sign in to continue',
+                            'Sign in to continue',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey.shade600,
@@ -194,47 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 32),
-
-                          // Sign up fields
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 220),
-                            switchInCurve: Curves.easeOut,
-                            switchOutCurve: Curves.easeIn,
-                            child: !_isSignUp
-                                ? const SizedBox.shrink()
-                                : Column(
-                                    key: const ValueKey('signup-extra-fields'),
-                                    children: [
-                                      _buildTextField(
-                                        controller: _displayNameController,
-                                        label: 'Full Name',
-                                        icon: Icons.person_outline,
-                                        validator: (value) {
-                                          if (value == null || value.trim().isEmpty) {
-                                            return 'Please enter your full name';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      const SizedBox(height: 16),
-                                      _buildTextField(
-                                        controller: _usernameController,
-                                        label: 'Username',
-                                        icon: Icons.alternate_email,
-                                        validator: (value) {
-                                          if (value == null || value.trim().isEmpty) {
-                                            return 'Please enter a username';
-                                          }
-                                          if (value.contains(' ')) {
-                                            return 'Username cannot contain spaces';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      const SizedBox(height: 16),
-                                    ],
-                                  ),
-                          ),
+                          // Sign up fields removed on login screen
 
                           // Email field
                           _buildTextField(
@@ -272,47 +216,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             },
                           ),
 
-                          // Confirm password when sign up
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
-                            child: !_isSignUp
-                                ? const SizedBox(height: 0)
-                                : Column(
-                                    key: const ValueKey('confirm-password'),
-                                    children: [
-                                      const SizedBox(height: 16),
-                                      _buildTextField(
-                                        controller: _confirmPasswordController,
-                                        label: 'Confirm Password',
-                                        icon: Icons.lock_reset_outlined,
-                                        obscureText: _confirmPasswordObscured,
-                                        onToggleObscure: () => setState(() => _confirmPasswordObscured = !_confirmPasswordObscured),
-                                        validator: (value) {
-                                          if (_isSignUp) {
-                                            if (value == null || value.isEmpty) {
-                                              return 'Please confirm your password';
-                                            }
-                                            if (value != _passwordController.text) {
-                                              return 'Passwords do not match';
-                                            }
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                          ),
+                          // No confirm password on login screen
                           const SizedBox(height: 24),
 
-                          // Forgot password (login only)
-                          if (!_isSignUp)
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: _onForgotPassword,
-                                child: const Text('Forgot Password?'),
-                              ),
+                          // Forgot password
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: _onForgotPassword,
+                              child: const Text('Forgot Password?'),
                             ),
+                          ),
 
                           // Submit button
                           Consumer<AuthProvider>(
@@ -339,9 +253,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                             strokeWidth: 2,
                                           ),
                                         )
-                                      : Text(
-                                          _isSignUp ? 'Sign Up' : 'Log In',
-                                          style: const TextStyle(
+                                      : const Text(
+                                          'Log In',
+                                          style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                             color: Colors.white,
@@ -358,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Toggle between login and sign up
+                  // Link to register screen
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                     decoration: BoxDecoration(
@@ -369,40 +283,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _isSignUp = !_isSignUp;
-                          _formKey.currentState?.reset();
-                          _displayNameController.clear();
-                          _usernameController.clear();
-                          _confirmPasswordController.clear();
-                          _passwordObscured = true;
-                          _confirmPasswordObscured = true;
-                        });
-                      },
+                      onTap: () => Navigator.pushNamed(context, '/register'),
                       child: RichText(
                         text: TextSpan(
                           style: const TextStyle(color: Colors.white),
                           children: [
-                            TextSpan(
-                              text: _isSignUp
-                                  ? 'Already have an account? '
-                                  : 'Don\'t have an account? ',
-                            ),
-                            TextSpan(
-                              text: _isSignUp ? 'Log In' : 'Sign Up',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
+                            const TextSpan(text: 'Don\'t have an account? '),
+                            const TextSpan(text: 'Sign Up', style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
                           ],
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),

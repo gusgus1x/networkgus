@@ -151,6 +151,7 @@ class ChatProvider with ChangeNotifier {
     String receiverId, {
     MessageType type = MessageType.text,
     String? imageUrl,
+    String? videoUrl,
   }) async {
     // Only block empty text messages; allow non-text like images
     if (type == MessageType.text && content.trim().isEmpty) return;
@@ -164,7 +165,9 @@ class ChatProvider with ChangeNotifier {
       type: type,
       timestamp: DateTime.now(),
       isRead: false,
-      metadata: imageUrl != null ? {'imageUrl': imageUrl} : null,
+      metadata: imageUrl != null
+          ? {'imageUrl': imageUrl}
+          : (videoUrl != null ? {'videoUrl': videoUrl} : null),
     );
 
     // Add to local messages immediately for instant UI update
@@ -182,6 +185,7 @@ class ChatProvider with ChangeNotifier {
         content: content.trim(),
         type: type,
         imageUrl: imageUrl,
+        videoUrl: videoUrl,
       );
       
       // Optimistically update conversations preview so Chat list updates immediately
@@ -196,7 +200,9 @@ class ChatProvider with ChangeNotifier {
             type: type,
             timestamp: DateTime.now(),
             isRead: false,
-            metadata: imageUrl != null ? {'imageUrl': imageUrl} : null,
+            metadata: imageUrl != null
+                ? {'imageUrl': imageUrl}
+                : (videoUrl != null ? {'videoUrl': videoUrl} : null),
           );
           _conversations[idx] = _conversations[idx].copyWith(
             lastMessage: preview,

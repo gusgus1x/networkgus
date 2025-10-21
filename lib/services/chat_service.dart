@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:typed_data';
 import '../models/message_model.dart';
 import '../models/conversation_model.dart';
@@ -178,11 +179,12 @@ class ChatService {
     required String content,
     MessageType type = MessageType.text,
     String? imageUrl,
+    String? videoUrl,
   }) async {
     try {
       final DocumentReference messageRef = _messagesCollection.doc();
 
-      final messageData = {
+      final Map<String, dynamic> messageData = {
         'id': messageRef.id,
         'conversationId': conversationId,
         'senderId': senderId,
@@ -192,8 +194,14 @@ class ChatService {
         'timestamp': FieldValue.serverTimestamp(),
         'isRead': false,
         'replyToMessageId': null,
-        'metadata': imageUrl != null ? {'imageUrl': imageUrl} : null,
+        'metadata': null,
       };
+      if (imageUrl != null) {
+        messageData['metadata'] = {'imageUrl': imageUrl};
+      }
+      if (videoUrl != null) {
+        messageData['metadata'] = {'videoUrl': videoUrl};
+      }
 
       final WriteBatch batch = _firestore.batch();
 
@@ -247,6 +255,22 @@ class ChatService {
       debugPrint('Upload chat image error (Cloudinary): $e');
       debugPrintStack(stackTrace: stackTrace);
       throw Exception('Failed to upload image to Cloudinary');
+    }
+  }
+
+  // Upload chat video to Cloudinary - returns secure_url
+  Future<String> uploadChatVideo({
+    required String conversationId,
+    required Uint8List bytes,
+  }) async {
+    try {
+      final filename = 'chat_${conversationId}_${DateTime.now().millisecondsSinceEpoch}.mp4';
+      final url = await _cloudinary.uploadVideoBytes(bytes, filename: filename);
+      return url;
+    } catch (e, stackTrace) {
+      debugPrint('Upload chat video error (Cloudinary): $e');
+      debugPrintStack(stackTrace: stackTrace);
+      throw Exception('Failed to upload video to Cloudinary');
     }
   }
 
