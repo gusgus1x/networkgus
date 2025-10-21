@@ -264,27 +264,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Future<void> _refreshChat() async {
-    try {
-      final auth = context.read<AuthProvider>().user;
-      await context.read<ChatProvider>().preloadMessages(widget.conversationId);
-      if (auth?.uid != null) {
-        await context.read<ChatProvider>().markAsRead(widget.conversationId, auth!.uid);
-      }
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Chat refreshed'), duration: Duration(milliseconds: 600)),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Refresh failed: $e')),
-        );
-      }
-    }
-  }
-
   Widget _buildDateSeparator(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

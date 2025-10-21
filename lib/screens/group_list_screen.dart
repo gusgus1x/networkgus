@@ -176,9 +176,9 @@ class GroupListScreen extends StatelessWidget {
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: theme.cardColor,
+                          color: theme.scaffoldBackgroundColor,
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: theme.dividerColor, width: 1),
+                          border: Border.all(color: Colors.black, width: 1),
                         ),
                         child: ListTile(
                           leading: CircleAvatar(

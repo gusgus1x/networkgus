@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'dart:io' as io;
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import 'cloudinary_config.dart';

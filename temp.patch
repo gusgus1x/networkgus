@@ -1,0 +1,39 @@
+*** Begin Patch
+*** Update File: lib/screens/post_detail_screen.dart
+@@
+-                        child: Text(
+-                          comment.userDisplayName,
+-                          overflow: TextOverflow.ellipsis,
+-                          style: const TextStyle(
+-                            color: Colors.white,
+-                            fontWeight: FontWeight.w600,
+-                            fontSize: 13,
+-                          ),
+-                        ),
++                        child: Text(
++                          comment.userDisplayName,
++                          overflow: TextOverflow.ellipsis,
++                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
++                            fontWeight: FontWeight.w600,
++                            fontSize: 13,
++                          ),
++                        ),
+@@
+-                        const Icon(Icons.verified, color: Colors.blue, size: 14),
++                        Icon(Icons.verified, color: Theme.of(context).colorScheme.primary, size: 14),
+@@
+-                        style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
++                        style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12),
+@@
+-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
++                        style: TextStyle(color: Theme.of(context).hintColor, fontSize: 11),
+@@
+-                  Text(
+-                    comment.content,
+-                    style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.35),
+-                  ),
++                  Text(
++                    comment.content,
++                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14, height: 1.35),
++                  ),
+*** End Patch

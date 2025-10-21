@@ -24,10 +24,11 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
   final theme = Theme.of(context);
   final borderColor = theme.dividerColor;
+  final bg = theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surfaceVariant.withOpacity(0.2);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: bg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: borderColor, width: 1),
       ),
@@ -210,7 +211,7 @@ class PostCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.2), borderRadius: BorderRadius.circular(16), border: Border.all(color: borderColor, width: 1)),
+      decoration: BoxDecoration(color: Colors.transparent, borderRadius: BorderRadius.circular(16), border: Border.all(color: borderColor, width: 1)),
       child: Row(
         children: [
           UserAvatar(imageUrl: user?.profileImageUrl, displayName: user?.displayName ?? 'User', radius: 12),

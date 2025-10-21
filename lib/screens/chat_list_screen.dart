@@ -411,7 +411,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           decoration: BoxDecoration(
                             color: Theme.of(context).cardColor,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Theme.of(context).dividerColor, width: 1),
+                            border: Border.all(color: Colors.black, width: 1.2),
                           ),
                           child: Material(
                             color: Colors.transparent,

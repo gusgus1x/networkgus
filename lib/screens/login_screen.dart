@@ -71,12 +71,11 @@ class _LoginScreenState extends State<LoginScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF0A0A0A),
-              Color(0xFF1A1A1A),
-              Color(0xFF2D2D2D),
-              Color(0xFF6C5CE7),
+              Color(0xFFFFF1F7), // very light pink
+              Color(0xFFFF9ECF), // pastel pink
+              Color(0xFFA8E6CF), // pastel mint
             ],
-            stops: [0.0, 0.3, 0.7, 1.0],
+            stops: [0.0, 0.6, 1.0],
           ),
         ),
         child: SafeArea(
@@ -96,14 +95,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF6C5CE7), Color(0xFFA29BFE)],
+                        colors: [Color(0xFFFF9ECF), Color(0xFFA8E6CF)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF6C5CE7).withOpacity(0.3),
+                          color: const Color(0xFFFF9ECF).withOpacity(0.35),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -112,16 +111,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: const Icon(
                       Icons.camera_alt_outlined,
                       size: 64,
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(height: 24),
                   
                   // App Name
                   const Text(
-                    'SocialNetwork',
+                    'GorgusDekSomBun',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Colors.black,
                       fontSize: 36,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1,
@@ -133,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'Connect with friends and share your moments',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.black.withOpacity(0.7),
                       fontSize: 16,
                       fontWeight: FontWeight.w400,
                     ),
@@ -237,8 +236,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: ElevatedButton(
                                   onPressed: authProvider.isLoading ? null : _submit,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF405DE6), // solid blue
-                                    foregroundColor: Colors.white,
+                                    backgroundColor: Color(0xFFFF9ECF),
+                                    foregroundColor: Colors.black,
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(25),
@@ -258,7 +257,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.white,
+                                            color: Colors.black,
                                           ),
                                         ),
                                 ),
@@ -286,10 +285,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       onTap: () => Navigator.pushNamed(context, '/register'),
                       child: RichText(
                         text: TextSpan(
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.black),
                           children: [
                             const TextSpan(text: 'Don\'t have an account? '),
-                            const TextSpan(text: 'Sign Up', style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
+                            const TextSpan(text: 'Sign Up', style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline, color: Colors.black)),
                           ],
                         ),
                       ),
@@ -325,31 +324,31 @@ class _LoginScreenState extends State<LoginScreen> {
       cursorColor: Colors.black,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.grey.shade700),
-        prefixIcon: Icon(icon, color: Colors.grey.shade600),
+        labelStyle: const TextStyle(color: Colors.black87),
+        prefixIcon: Icon(icon, color: Colors.black87),
         suffixIcon: onToggleObscure == null
             ? null
             : IconButton(
                 icon: Icon(
                   obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  color: Colors.grey.shade600,
+                  color: Colors.black87,
                 ),
                 onPressed: onToggleObscure,
               ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Colors.black26),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: Colors.black26),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF405DE6), width: 2),
+          borderSide: const BorderSide(color: Color(0xFFFF9ECF), width: 2),
         ),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: Color(0xFFFFF1F7),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );

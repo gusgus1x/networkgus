@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../providers/posts_provider.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import '../services/cloudinary_service.dart';
 import '../providers/auth_provider.dart';
 

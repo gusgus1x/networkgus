@@ -286,9 +286,9 @@ class _SearchScreenState extends State<SearchScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: theme.scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.dividerColor, width: 1),
+        border: Border.all(color: Colors.black, width: 1),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -424,3 +424,6 @@ class _SearchScreenState extends State<SearchScreen> {
     await _loadRecentUsers();
   }
 }
+
+
+

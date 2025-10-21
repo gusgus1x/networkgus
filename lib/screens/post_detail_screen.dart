@@ -19,7 +19,6 @@ class PostDetailScreen extends StatefulWidget {
 
 class _PostDetailScreenState extends State<PostDetailScreen> {
   static const String dislikeEmoji = '\u{1F44E}';
-
   String? _replyToCommentId;
   String? _replyToDisplay;
   final TextEditingController _commentController = TextEditingController();
@@ -38,15 +37,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     context.read<PostsProvider>().stopListeningToComments(widget.postId);
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Post', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF1E1E1E),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text('Post', style: theme.textTheme.titleLarge?.copyWith(color: theme.appBarTheme.foregroundColor)),
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        iconTheme: theme.appBarTheme.iconTheme,
       ),
       body: Consumer2<PostsProvider, AuthProvider>(
         builder: (context, postsProvider, authProvider, _) {
@@ -55,76 +54,75 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           final isCommentsLoading = postsProvider.isCommentsLoading(widget.postId);
 
           if (post == null) {
-            return const Center(
-              child: Text('Post not found', style: TextStyle(color: Colors.white)),
-            );
+            return Center(child: Text('Post not found', style: theme.textTheme.bodyMedium));
           }
 
           return Column(
             children: [
               Expanded(
                 child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildPostHeader(post),
-                      _buildPostContent(post),
-                      _buildPostActions(post),
-                      const Divider(thickness: 8),
+                  child: Container(
+                    color: theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surfaceVariant.withOpacity(0.08),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildPostHeader(post),
+                        _buildPostContent(post),
+                        _buildPostActions(post),
+                        Divider(thickness: 8, color: theme.dividerColor),
 
-                      if (_replyToCommentId != null)
+                        if (_replyToCommentId != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary.withOpacity(theme.brightness == Brightness.light ? 0.12 : 0.2),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.reply, size: 16, color: theme.hintColor),
+                                      const SizedBox(width: 6),
+                                      Text('Replying to ${_replyToDisplay ?? ''}', style: TextStyle(color: theme.hintColor)),
+                                      const SizedBox(width: 8),
+                                      GestureDetector(
+                                        onTap: () => setState(() {
+                                          _replyToCommentId = null;
+                                          _replyToDisplay = null;
+                                        }),
+                                        child: Icon(Icons.close, size: 16, color: theme.hintColor),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF2A2A2A),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.reply, size: 16, color: Colors.white70),
-                                    const SizedBox(width: 6),
-                                    Text('Replying to ${_replyToDisplay ?? ''}', style: const TextStyle(color: Colors.white70)),
-                                    const SizedBox(width: 8),
-                                    GestureDetector(
-                                      onTap: () => setState(() {
-                                        _replyToCommentId = null;
-                                        _replyToDisplay = null;
-                                      }),
-                                      child: const Icon(Icons.close, size: 16, color: Colors.white70),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                          padding: const EdgeInsets.all(16),
+                          child: Text('Comments', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                         ),
 
-                      const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text('Comments', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                      ),
-
-                      if (isCommentsLoading)
-                        const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
-                      else if (comments.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(20),
-                          child: Center(
-                            child: Text('No comments yet. Be the first to comment!', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                        if (isCommentsLoading)
+                          const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+                        else if (comments.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Center(child: Text('No comments yet. Be the first to comment!', style: TextStyle(color: theme.hintColor, fontSize: 16))),
+                          )
+                        else
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: comments.length,
+                            itemBuilder: (_, i) => _buildCommentTile(comments[i]),
                           ),
-                        )
-                      else
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: comments.length,
-                          itemBuilder: (_, i) => _buildCommentTile(comments[i]),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -134,9 +132,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         },
       ),
     );
-  }
-
-  Widget _buildPostHeader(Post post) {
+  }  Widget _buildPostHeader(Post post) {
     return ListTile(
       leading: _PostAuthorAvatarDetail(
         userId: post.userId,
@@ -146,7 +142,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       ),
       title: Row(
         children: [
-          Text(post.userDisplayName, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+          Text(post.userDisplayName, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
           if (post.isUserVerified) ...[
             const SizedBox(width: 4),
             Icon(Icons.verified, color: Colors.blue.shade600, size: 16),
@@ -156,8 +152,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('@${post.username}', style: const TextStyle(color: Colors.white70)),
-          Text(_formatTimestamp(post.createdAt), style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+          Text('@${post.username}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
+          Text(_formatTimestamp(post.createdAt), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 12)),
         ],
       ),
     );
@@ -247,12 +243,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               final uid = context.read<AuthProvider>().currentUser?.id;
               if (uid != null) context.read<PostsProvider>().likePost(post.id, uid);
             },
-            icon: Icon(post.isLiked ? Icons.favorite : Icons.favorite_border, color: post.isLiked ? Colors.red : Colors.white, size: 24),
+            icon: Icon(post.isLiked ? Icons.favorite : Icons.favorite_border, color: post.isLiked ? Colors.red : Theme.of(context).colorScheme.onSurface, size: 24),
           ),
           const SizedBox(width: 8),
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 22),
+            icon: Icon(Icons.chat_bubble_outline, color: Theme.of(context).colorScheme.onSurface, size: 22),
           ),
           const SizedBox(width: 8),
           IconButton(
@@ -262,12 +258,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               final next = post.userReaction == dislikeEmoji ? null : dislikeEmoji;
               await context.read<PostsProvider>().setReaction(postId: post.id, userId: uid, emoji: next);
             },
-            icon: Icon(post.userReaction == dislikeEmoji ? Icons.thumb_down_alt : Icons.thumb_down_alt_outlined, color: post.userReaction == dislikeEmoji ? Theme.of(context).colorScheme.primary : Colors.white, size: 22),
+            icon: Icon(post.userReaction == dislikeEmoji ? Icons.thumb_down_alt : Icons.thumb_down_alt_outlined, color: Theme.of(context).colorScheme.onSurface, size: 22),
           ),
           const SizedBox(width: 8),
           IconButton(
             onPressed: () => _showReactionPicker(post),
-            icon: const Icon(Icons.emoji_emotions_outlined, color: Colors.white, size: 22),
+            icon: Icon(Icons.emoji_emotions_outlined, color: Theme.of(context).colorScheme.onSurface, size: 22),
           ),
           const Spacer(),
           IconButton(
@@ -275,7 +271,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               final uid = context.read<AuthProvider>().currentUser?.id;
               if (uid != null) context.read<PostsProvider>().bookmarkPost(post.id, uid);
             },
-            icon: Icon(post.isBookmarked ? Icons.bookmark : Icons.bookmark_border, color: post.isBookmarked ? const Color(0xFF6C5CE7) : Colors.white, size: 22),
+            icon: Icon(post.isBookmarked ? Icons.bookmark : Icons.bookmark_border, color: Theme.of(context).colorScheme.onSurface, size: 22),
           ),
         ],
       ),
@@ -349,33 +345,29 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         child: Text(
                           comment.userDisplayName,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 13),
                         ),
                       ),
                       if (comment.isUserVerified) ...[
                         const SizedBox(width: 4),
-                        const Icon(Icons.verified, color: Colors.blue, size: 14),
+                        Icon(Icons.verified, color: Theme.of(context).colorScheme.primary, size: 14),
                       ],
                       const SizedBox(width: 6),
                       Text(
                         '@${comment.username}',
-                        style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                        style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         _formatTimestamp(comment.createdAt),
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                        style: TextStyle(color: Theme.of(context).hintColor, fontSize: 11),
                       ),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Text(
                     comment.content,
-                    style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.35),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14, height: 1.35),
                   ),
                 ],
               ),
@@ -391,9 +383,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E1E1E),
-        // Removed top border line for a cleaner look
+      decoration: BoxDecoration(
+        color: Theme.of(context).inputDecorationTheme.fillColor ??
+            Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.2),
       ),
       child: Row(
         children: [
@@ -406,45 +398,39 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           Expanded(
             child: TextField(
               controller: _commentController,
-              style: const TextStyle(color: Colors.white),
+              style: Theme.of(context).textTheme.bodyMedium,
               decoration: InputDecoration(
                 hintText: 'Write a comment...',
-                hintStyle: const TextStyle(color: Colors.grey),
+                hintStyle: TextStyle(color: Theme.of(context).hintColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(color: Color(0xFF333333)),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(color: Color(0xFF333333)),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(color: Colors.blue),
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                 ),
                 filled: true,
-                fillColor: const Color(0xFF2A2A2A),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
+                fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.2),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
               maxLines: null,
             ),
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(
-              Icons.send,
-              color: Colors.blue,
-            ),
+            icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
             onPressed: _postComment,
           ),
         ],
       ),
     );
   }
-
+  
   Future<void> _postComment() async {
     final content = _commentController.text.trim();
     if (content.isEmpty) return;
@@ -489,6 +475,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 }
 
+
+
 class _PostAuthorAvatarDetail extends StatefulWidget {
   final String userId;
   final String? fallbackImageUrl;
@@ -505,6 +493,8 @@ class _PostAuthorAvatarDetail extends StatefulWidget {
   @override
   State<_PostAuthorAvatarDetail> createState() => _PostAuthorAvatarDetailState();
 }
+
+
 
 class _PostAuthorAvatarDetailState extends State<_PostAuthorAvatarDetail> {
   String? _imageUrl;
@@ -586,3 +576,9 @@ class _CommentAuthorAvatarState extends State<_CommentAuthorAvatar> {
     );
   }
 }
+
+
+
+
+
+

@@ -66,8 +66,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0A0A0A), Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF6C5CE7)],
-            stops: [0.0, 0.3, 0.7, 1.0],
+            colors: [Color(0xFFFFF1F7), Color(0xFFFF9ECF), Color(0xFFA8E6CF)],
+            stops: [0.0, 0.6, 1.0],
           ),
         ),
         child: SafeArea(
@@ -87,25 +87,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF6C5CE7), Color(0xFFA29BFE)],
+                              colors: [Color(0xFFFF9ECF), Color(0xFFA8E6CF)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF6C5CE7).withOpacity(0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
+                              BoxShadow(color: Color(0xFFFF9ECF).withOpacity(0.35), blurRadius: 20, offset: Offset(0, 10)),
                             ],
                           ),
-                          child: const Icon(Icons.camera_alt_outlined, size: 64, color: Colors.white),
+                          child: const Icon(Icons.camera_alt_outlined, size: 64, color: Colors.black),
                         ),
                         const SizedBox(height: 24),
-                        const Text('SocialNetwork', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w700, letterSpacing: 1)),
+                        const Text('SocialNetwork', style: TextStyle(color: Colors.black, fontSize: 36, fontWeight: FontWeight.w700, letterSpacing: 1)),
                         const SizedBox(height: 8),
-                        Text('Create your account', style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 16)),
+                        const Text('Create your account', style: TextStyle(color: Colors.black87, fontSize: 16)),
                         const SizedBox(height: 40),
 
                         Container(
@@ -196,8 +192,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       child: ElevatedButton(
                                         onPressed: authProvider.isLoading ? null : _submit,
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFF405DE6),
-                                          foregroundColor: Colors.white,
+                                          backgroundColor: Color(0xFFFF9ECF),
+                                          foregroundColor: Colors.black,
                                           elevation: 0,
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                                         ),
@@ -217,9 +213,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.black.withOpacity(0.06),
                             borderRadius: BorderRadius.circular(25),
-                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                            border: Border.all(color: Colors.black26),
                           ),
                           child: GestureDetector(
                             onTap: () {
@@ -229,14 +225,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 Navigator.pushReplacementNamed(context, '/login');
                               }
                             },
-                            child: const Text.rich(
-                              TextSpan(children: [
-                                TextSpan(text: 'Already have an account? '),
-                                TextSpan(text: 'Log In', style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
-                              ], style: TextStyle(color: Colors.white)),
+                            child: const Text.rich(TextSpan(children: [
+                              TextSpan(text: 'Already have an account? '),
+                              TextSpan(text: 'Log In', style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline, color: Colors.black)),
+                            ], style: TextStyle(color: Colors.black))),
                             ),
                           ),
-                        ),
+                        
                       ],
                     ),
                   ),
@@ -267,19 +262,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
       cursorColor: Colors.black,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.grey.shade700),
-        prefixIcon: Icon(icon, color: Colors.grey.shade600),
+        labelStyle: const TextStyle(color: Colors.black87),
+        prefixIcon: Icon(icon, color: Colors.black87),
         suffixIcon: onToggleObscure == null
             ? null
             : IconButton(
-                icon: Icon(obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.grey.shade600),
+                icon: Icon(obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.black87),
                 onPressed: onToggleObscure,
               ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF405DE6), width: 2)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.black26)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.black26)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFFF9ECF), width: 2)),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: Color(0xFFFFF1F7),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );

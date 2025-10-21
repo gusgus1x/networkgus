@@ -30,7 +30,7 @@ class PostComposer extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor, width: 0.5),
       ),
