@@ -61,47 +61,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFFFF1F7), Color(0xFFFF9ECF), Color(0xFFA8E6CF)],
-            stops: [0.0, 0.6, 1.0],
+            colors: [
+              Color(0xFF0D0D0D),
+              Color(0xFF1F1F1F),
+              Color(0xFFFF8A00),
+            ],
+            stops: [0.0, 0.65, 1.0],
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-                return SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(32, 32, 32, 32 + bottomInset),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+              final paddingBottom = (bottomInset > 0) ? bottomInset + 16 : 32.0;
+              return SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.fromLTRB(32, 32, 32, paddingBottom),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight - bottomInset),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFFFF9ECF), Color(0xFFA8E6CF)],
+                              colors: [Color(0xFFFFA726), Color(0xFFFF7043)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
-                              BoxShadow(color: Color(0xFFFF9ECF).withOpacity(0.35), blurRadius: 20, offset: Offset(0, 10)),
+                              BoxShadow(color: Colors.black.withOpacity(0.35), blurRadius: 20, offset: Offset(0, 10)),
                             ],
                           ),
-                          child: const Icon(Icons.camera_alt_outlined, size: 64, color: Colors.black),
+                          child: const Icon(Icons.camera_alt_outlined, size: 64, color: Colors.white),
                         ),
                         const SizedBox(height: 24),
-                        const Text('SocialNetwork', style: TextStyle(color: Colors.black, fontSize: 36, fontWeight: FontWeight.w700, letterSpacing: 1)),
+                        const Text('SocialNetwork', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w700, letterSpacing: 1)),
                         const SizedBox(height: 8),
-                        const Text('Create your account', style: TextStyle(color: Colors.black87, fontSize: 16)),
+                        const Text('Create your account', style: TextStyle(color: Colors.white70, fontSize: 16)),
                         const SizedBox(height: 40),
 
                         Container(
@@ -192,8 +198,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       child: ElevatedButton(
                                         onPressed: authProvider.isLoading ? null : _submit,
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Color(0xFFFF9ECF),
-                                          foregroundColor: Colors.black,
+                                          backgroundColor: Color(0xFFFF8A00),
+                                          foregroundColor: Colors.white,
                                           elevation: 0,
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                                         ),
@@ -213,9 +219,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.06),
+                            color: Colors.white.withOpacity(0.06),
                             borderRadius: BorderRadius.circular(25),
-                            border: Border.all(color: Colors.black26),
+                            border: Border.all(color: Colors.white30),
                           ),
                           child: GestureDetector(
                             onTap: () {
@@ -225,19 +231,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 Navigator.pushReplacementNamed(context, '/login');
                               }
                             },
-                            child: const Text.rich(TextSpan(children: [
-                              TextSpan(text: 'Already have an account? '),
-                              TextSpan(text: 'Log In', style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline, color: Colors.black)),
-                            ], style: TextStyle(color: Colors.black))),
+                            child: const Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(text: 'Already have an account? '),
+                                  TextSpan(
+                                    text: 'Log In',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      decoration: TextDecoration.underline,
+                                      decorationThickness: 2.0,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
+                        ),
                         
                       ],
                     ),
                   ),
                 );
-              },
-            ),
+            },
           ),
         ),
       ),
@@ -270,11 +289,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 icon: Icon(obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.black87),
                 onPressed: onToggleObscure,
               ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.black26)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.black26)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFFF9ECF), width: 2)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.black54)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.black54)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.black, width: 2)),
         filled: true,
-        fillColor: Color(0xFFFFF1F7),
+        fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );

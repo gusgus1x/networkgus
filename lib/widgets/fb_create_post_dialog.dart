@@ -203,6 +203,7 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
     final firstName = displayName.split(' ').first;
 
     return Dialog(
+      backgroundColor: theme.cardColor,
       child: Stack(
         children: [
           Padding(
@@ -267,10 +268,23 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
                         controller: _contentController,
                         decoration: InputDecoration(
                           hintText: "What's on your mind, $firstName?",
-                          border: InputBorder.none,
-                          hintStyle: theme.textTheme.titleMedium?.copyWith(color: Colors.grey.shade500),
-                          isCollapsed: true,
-                          contentPadding: EdgeInsets.zero,
+                          hintStyle: theme.textTheme.titleMedium?.copyWith(color: theme.hintColor),
+                          isCollapsed: false,
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.black54),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.black54),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.black, width: 2),
+                          ),
+                          contentPadding: const EdgeInsets.all(12),
                         ),
                         onChanged: (_) => setState(() {}),
                         style: theme.textTheme.titleMedium?.copyWith(height: 1.4),
@@ -297,9 +311,9 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceVariant.withOpacity(0.2),
+                            color: theme.cardColor,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade800, width: 0.5),
+                            border: Border.all(color: Colors.black54, width: 1),
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           child: Row(
@@ -324,6 +338,10 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _isPosting || !_canPost ? null : _createPost,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: Colors.white,
+                        ),
                         child: _isPosting
                             ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                             : const Text('Post'),
@@ -424,4 +442,3 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
     );
   }
 }
-

@@ -10,6 +10,7 @@ import 'providers/group_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/forgot_password_screen.dart';
 import 'providers/theme_provider.dart';
 
 void main() async {
@@ -36,71 +37,30 @@ class MyApp extends StatelessWidget {
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
-          final lightPastel = ThemeData(
+          // Light theme (orange accent on light surfaces)
+          final orangeLight = ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFFFF9ECF),
+              seedColor: const Color(0xFFFF8A00),
               brightness: Brightness.light,
             ).copyWith(
-              primary: const Color(0xFFFF9ECF),
-              secondary: const Color(0xFFA8E6CF),
-              background: const Color(0xFFF6E8EE),
-              surfaceVariant: const Color(0xFFF6E8EE),
+              primary: const Color(0xFFFF8A00),
+              secondary: const Color(0xFFFFA726),
             ),
-            scaffoldBackgroundColor: const Color(0xFFF6E8EE),
+            // Soft orange background for the whole app in light mode
+            scaffoldBackgroundColor: const Color(0xFFFFF3E0), // Orange 50
             appBarTheme: const AppBarTheme(
-              backgroundColor: Color(0xFFF6E8EE),
-              foregroundColor: Colors.black,
-              elevation: 0,
-              centerTitle: false,
-              iconTheme: IconThemeData(color: Color(0xFFA8E6CF)),
-            ),
-            cardColor: const Color(0xFFF6E8EE),
-            inputDecorationTheme: const InputDecorationTheme(
-              filled: true,
-              fillColor: Color(0xFFF8EEF3),
-            ),
-            textTheme: const TextTheme(
-              bodyMedium: TextStyle(color: Colors.black87),
-              bodyLarge: TextStyle(color: Colors.black87),
-              titleLarge: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-            ),
-            iconTheme: const IconThemeData(color: Color(0xFFA8E6CF)),
-            bottomNavigationBarTheme: BottomNavigationBarThemeData(
-              backgroundColor: Colors.white,
-              selectedItemColor: const Color(0xFFFF9ECF),
-              selectedIconTheme: const IconThemeData(color: Color(0xFFFF9ECF)),
-              selectedLabelStyle: const TextStyle(color: Color(0xFFFF9ECF), fontWeight: FontWeight.w600),
-              unselectedItemColor: Colors.grey.shade600,
-              unselectedIconTheme: IconThemeData(color: Colors.grey.shade600),
-              unselectedLabelStyle: TextStyle(color: Colors.grey.shade600),
-              showUnselectedLabels: true,
-              type: BottomNavigationBarType.fixed,
-            ),
-            dividerColor: Colors.black12,
-          );
-
-          final lightWhite = ThemeData(
-            useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFFFF9ECF),
-              brightness: Brightness.light,
-            ).copyWith(
-              primary: const Color(0xFFFF9ECF),
-              secondary: const Color(0xFFA8E6CF),
-            ),
-            scaffoldBackgroundColor: Colors.white,
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.white,
+              backgroundColor: Color(0xFFFFF3E0),
               foregroundColor: Colors.black,
               elevation: 0,
               centerTitle: false,
               iconTheme: IconThemeData(color: Colors.black87),
             ),
-            cardColor: Colors.white,
+            // Card surfaces use a soft orange tint to match theme
+            cardColor: const Color(0xFFFFF8E1),
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: Colors.grey.shade50,
+              fillColor: Colors.white,
             ),
             textTheme: const TextTheme(
               bodyMedium: TextStyle(color: Colors.black87),
@@ -109,34 +69,37 @@ class MyApp extends StatelessWidget {
             ),
             iconTheme: const IconThemeData(color: Colors.black87),
             bottomNavigationBarTheme: BottomNavigationBarThemeData(
-              backgroundColor: Colors.white,
-              selectedItemColor: const Color(0xFFFF9ECF),
-              selectedIconTheme: const IconThemeData(color: Color(0xFFFF9ECF)),
-              selectedLabelStyle: const TextStyle(color: Color(0xFFFF9ECF), fontWeight: FontWeight.w600),
-              unselectedItemColor: Colors.grey.shade600,
-              unselectedIconTheme: IconThemeData(color: Colors.grey.shade600),
-              unselectedLabelStyle: TextStyle(color: Colors.grey.shade600),
+              // Match light theme surfaces
+              backgroundColor: const Color(0xFFFFF8E1), // same as cardColor
+              selectedItemColor: const Color(0xFFFF8A00),
+              selectedIconTheme: const IconThemeData(color: Color(0xFFFF8A00)),
+              selectedLabelStyle: const TextStyle(color: Color(0xFFFF8A00), fontWeight: FontWeight.w600),
+              unselectedItemColor: Colors.black54,
+              unselectedIconTheme: const IconThemeData(color: Colors.black54),
+              unselectedLabelStyle: const TextStyle(color: Colors.black54),
               showUnselectedLabels: true,
               type: BottomNavigationBarType.fixed,
+              elevation: 0,
             ),
-            dividerColor: Colors.black12,
+            // Slightly stronger divider so cards/composer outlines are clearer
+            dividerColor: Colors.black26,
           );
-
-          final effectiveLight = themeProvider.themeMode == ThemeMode.light ? lightWhite : lightPastel;
+          final effectiveLight = orangeLight;
 
           return MaterialApp(
             title: 'SocialNetwork',
             themeMode: themeProvider.themeMode,
             theme: effectiveLight,
           // Dark theme keeps palette but on dark surfaces
+          // Dark theme (near-black surfaces with orange accent)
           darkTheme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFFFF9ECF),
+              seedColor: const Color(0xFFFF8A00),
               brightness: Brightness.dark,
             ).copyWith(
-              primary: const Color(0xFFFF9ECF),
-              secondary: const Color(0xFFA8E6CF),
+              primary: const Color(0xFFFF8A00),
+              secondary: const Color(0xFFFFA726),
             ),
             scaffoldBackgroundColor: const Color(0xFF121212),
             appBarTheme: const AppBarTheme(
@@ -144,7 +107,7 @@ class MyApp extends StatelessWidget {
               foregroundColor: Colors.white,
               elevation: 0,
               centerTitle: false,
-              iconTheme: IconThemeData(color: Color(0xFFA8E6CF)),
+              iconTheme: IconThemeData(color: Colors.white70),
             ),
             cardColor: const Color(0xFF1A1A1A),
             textTheme: const TextTheme(
@@ -152,12 +115,12 @@ class MyApp extends StatelessWidget {
               bodyLarge: TextStyle(color: Colors.white70),
               titleLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-            iconTheme: const IconThemeData(color: Color(0xFFA8E6CF)),
+            iconTheme: const IconThemeData(color: Colors.white70),
             bottomNavigationBarTheme: const BottomNavigationBarThemeData(
               backgroundColor: Color(0xFF1A1A1A),
-              selectedItemColor: Color(0xFFFF9ECF),
-              selectedIconTheme: IconThemeData(color: Color(0xFFFF9ECF)),
-              selectedLabelStyle: TextStyle(color: Color(0xFFFF9ECF), fontWeight: FontWeight.w600),
+              selectedItemColor: Color(0xFFFF8A00),
+              selectedIconTheme: IconThemeData(color: Color(0xFFFF8A00)),
+              selectedLabelStyle: TextStyle(color: Color(0xFFFF8A00), fontWeight: FontWeight.w600),
               unselectedItemColor: Colors.white54,
               unselectedIconTheme: IconThemeData(color: Colors.white54),
               unselectedLabelStyle: TextStyle(color: Colors.white54),
@@ -171,6 +134,7 @@ class MyApp extends StatelessWidget {
             routes: {
               '/login': (context) => const LoginScreen(),
               '/register': (context) => const RegisterScreen(),
+              '/forgot': (context) => const ForgotPasswordScreen(),
               '/home': (context) => const HomeScreen(),
             },
           );

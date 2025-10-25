@@ -429,7 +429,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
           // Action buttons
           if (isOwnProfile) ...[
-            // Edit Profile button for own profile
+            // Edit Profile button for own profile (share button removed)
             Row(
               children: [
                 Expanded(
@@ -443,19 +443,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ),
                     child: const Text('Edit profile', style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton(
-                  onPressed: () {
-                    // Share profile
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Theme.of(context).dividerColor),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    minimumSize: const Size(44, 40),
-                    foregroundColor: Theme.of(context).colorScheme.onSurface,
-                  ),
-                  child: const Icon(Icons.person_add_outlined, size: 18),
                 ),
               ],
             ),
@@ -576,108 +563,137 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final displayNameController = TextEditingController(text: _user!.displayName);
     final bioController = TextEditingController(text: _user!.bio ?? '');
 
+    final theme = Theme.of(context);
+    final inputBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: theme.dividerColor),
+    );
+
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Theme.of(context).cardColor,
+      builder: (dialogContext) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Edit Profile', style: TextStyle(color: Colors.white)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                UserAvatar(imageUrl: _user!.profileImageUrl, displayName: _user!.displayName, radius: 24),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _isUploadingAvatar ? null : () => _changeProfilePhoto(dialogContext),
-                    icon: _isUploadingAvatar
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.image, size: 18),
-                    label: Text(_isUploadingAvatar ? 'Uploading...' : 'Change photo'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.onSurface,
-                      side: BorderSide(color: Theme.of(context).dividerColor),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text('Edit Profile', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+                    ),
+                    IconButton(
+                      tooltip: 'Close',
+                      onPressed: () => Navigator.pop(dialogContext),
+                      icon: const Icon(Icons.close),
+                    )
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    UserAvatar(imageUrl: _user!.profileImageUrl, displayName: _user!.displayName, radius: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _isUploadingAvatar ? null : () => _changeProfilePhoto(dialogContext),
+                        icon: _isUploadingAvatar
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.image_outlined, size: 18),
+                        label: Text(_isUploadingAvatar ? 'Uploading...' : 'Change photo'),
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.2),
+                          foregroundColor: theme.colorScheme.onSurface,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Text('Display Name', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: displayNameController,
+                  maxLength: 50,
+                  decoration: InputDecoration(
+                    hintText: 'Display Name',
+                    counterText: '',
+                    filled: true,
+                    isDense: true,
+                    border: inputBorder,
+                    enabledBorder: inputBorder,
+                    focusedBorder: inputBorder.copyWith(
+                      borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
                     ),
                   ),
                 ),
-              ]),
-              const SizedBox(height: 16),
-              const Text('Display Name', style: TextStyle(color: Colors.grey)),
-              const SizedBox(height: 6),
-              TextField(
-                controller: displayNameController,
-                style: const TextStyle(color: Colors.white),
-                maxLength: 50,
-                decoration: InputDecoration(
-                  hintText: 'Display Name',
-                  counterText: '',
-                  filled: true,
-                  fillColor: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).cardColor,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Theme.of(context).dividerColor)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Theme.of(context).dividerColor)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary)),
+                const SizedBox(height: 10),
+                Text('Bio', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: bioController,
+                  maxLines: 4,
+                  maxLength: 200,
+                  decoration: InputDecoration(
+                    hintText: 'Tell people about you',
+                    counterText: '',
+                    filled: true,
+                    isDense: true,
+                    border: inputBorder,
+                    enabledBorder: inputBorder,
+                    focusedBorder: inputBorder.copyWith(
+                      borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: bioController,
-                style: const TextStyle(color: Colors.white),
-                maxLines: 4,
-                maxLength: 200,
-                decoration: InputDecoration(
-                  hintText: 'Bio',
-                  counterText: '',
-                  filled: true,
-                  fillColor: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).cardColor,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Theme.of(context).dividerColor)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Theme.of(context).dividerColor)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Theme.of(context).colorScheme.primary)),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (_isUploadingAvatar) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please wait until photo upload finishes')),
+                          );
+                          return;
+                        }
+                        try {
+                          await context.read<AuthProvider>().updateProfile(
+                            displayName: displayNameController.text.trim(),
+                            bio: bioController.text.trim(),
+                          );
+                          Navigator.pop(dialogContext);
+                          _loadUserProfile();
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to update profile: $e')),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                      ),
+                      child: const Text('Save'),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (_isUploadingAvatar) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please wait until photo upload finishes')),
-                );
-                return;
-              }
-              try {
-                await context.read<AuthProvider>().updateProfile(
-                  displayName: displayNameController.text.trim(),
-                  bio: bioController.text.trim(),
-                );
-                Navigator.pop(dialogContext);
-                _loadUserProfile();
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to update profile: $e')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            ),
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
   }

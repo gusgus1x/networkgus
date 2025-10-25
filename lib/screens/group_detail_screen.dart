@@ -9,7 +9,7 @@ import '../providers/posts_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
 import '../widgets/post_card.dart';
-import '../widgets/create_post_dialog.dart';
+import '../widgets/fb_create_post_dialog.dart';
 import '../services/cloudinary_service.dart';
 
 class GroupDetailScreen extends StatefulWidget {
@@ -134,6 +134,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   Widget build(BuildContext context) {
     final currentUserId = Provider.of<AuthProvider>(context, listen: false).currentUser?.id;
     final isOwner = currentUserId == _group.ownerId;
+    final isMember = currentUserId != null && _group.members.contains(currentUserId);
 
     return Scaffold(
       body: CustomScrollView(
@@ -356,12 +357,14 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                     ),
                     icon: const Icon(Icons.edit),
                     label: const Text('Create Post'),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => CreatePostDialog(groupId: _group.id),
-                      );
-                    },
+                    onPressed: !isMember
+                        ? null
+                        : () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => FBCreatePostDialog(groupId: _group.id),
+                            );
+                          },
                   ),
                 ],
               ),

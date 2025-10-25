@@ -62,14 +62,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               Expanded(
                 child: SingleChildScrollView(
                   child: Container(
-                    color: theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surfaceVariant.withOpacity(0.08),
+                    color: theme.cardColor,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildPostHeader(post),
                         _buildPostContent(post),
                         _buildPostActions(post),
-                        Divider(thickness: 8, color: theme.dividerColor),
+                        Divider(thickness: 1, height: 20, color: theme.dividerColor),
 
                         if (_replyToCommentId != null)
                           Padding(
@@ -166,7 +166,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         if (post.content.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(post.content, style: const TextStyle(fontSize: 18, height: 1.4, color: Colors.white)),
+            child: Text(post.content, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 18, height: 1.4)),
           ),
         if (post.videoUrl != null && post.videoUrl!.isNotEmpty)
           Padding(
@@ -190,13 +190,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       height: 300,
                     );
                     return Container(
-                      color: const Color(0xFF1E1E1E),
+                      color: Theme.of(context).cardColor,
                       child: Image.network(
                         url,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
-                          color: Colors.grey.shade800,
-                          child: const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 48)),
+                          color: Theme.of(context).dividerColor.withOpacity(0.2),
+                          child: Icon(Icons.broken_image, color: Theme.of(context).hintColor, size: 48),
                         ),
                         loadingBuilder: (context, child, progress) {
                           if (progress == null) return child;
@@ -282,7 +282,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     const emojis = ['\u{2764}\u{FE0F}', '\u{1F44D}', '\u{1F44E}', '\u{1F602}', '\u{1F62E}', '\u{1F622}', '\u{1F525}'];
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -331,9 +331,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A),
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF2C2C2C)),
+                border: Border.all(color: Theme.of(context).dividerColor),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Column(
@@ -404,18 +404,18 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 hintStyle: TextStyle(color: Theme.of(context).hintColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                  borderSide: const BorderSide(color: Colors.black54),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                  borderSide: const BorderSide(color: Colors.black54),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                  borderSide: const BorderSide(color: Colors.black, width: 2),
                 ),
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.2),
+                fillColor: Theme.of(context).cardColor,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
               maxLines: null,

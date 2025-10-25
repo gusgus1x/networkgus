@@ -256,6 +256,9 @@ class PostsProvider with ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Error creating post: $e');
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
     }
 
     _isLoading = false;

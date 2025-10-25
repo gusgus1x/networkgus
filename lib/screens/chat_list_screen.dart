@@ -163,10 +163,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.chat_bubble_rounded, size: 22),
+                    icon: const Icon(Icons.person_add_alt_1, size: 22),
                     onPressed: () => _showNewChatDialog(),
                     color: theme.colorScheme.onSurface,
-                    tooltip: 'New conversation',
+                    tooltip: 'Start a new chat',
                   ),
                 ),
               ],
@@ -338,32 +338,33 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.blue.shade400,
-                                Colors.indigo.shade500,
+                        InkWell(
+                          borderRadius: BorderRadius.circular(28),
+                          onTap: _showNewChatDialog,
+                          child: Ink(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.blue.shade400,
+                                  Colors.indigo.shade500,
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(28),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.blue.shade200.withOpacity(0.4),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
                               ],
                             ),
-                            borderRadius: BorderRadius.circular(25),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.blue.shade200.withOpacity(0.4),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Text(
-                            '👆 Tap the compose button above',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Text('📝  Start a new chat',
+                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                              ],
                             ),
                           ),
                         ),

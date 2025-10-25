@@ -30,9 +30,9 @@ class PostComposer extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor, width: 0.5),
+        border: Border.all(color: borderColor, width: 1.0),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -47,9 +47,9 @@ class PostComposer extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
-                      color: theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surfaceVariant,
+                      color: theme.cardColor,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: borderColor, width: 0.6),
+                      border: Border.all(color: borderColor, width: 1.0),
                     ),
                     child: Text(
                       "What's on your mind, ${displayName.split(' ').first}?",

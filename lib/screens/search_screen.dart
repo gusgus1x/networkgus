@@ -126,9 +126,10 @@ class _SearchScreenState extends State<SearchScreen> {
         title: Container(
           height: 45,
           decoration: BoxDecoration(
-            color: theme.inputDecorationTheme.fillColor ?? theme.cardColor,
+            // Match theme surfaces (orange tint in light mode)
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(22.5),
-            border: Border.all(color: theme.dividerColor, width: 1),
+            border: Border.all(color: Colors.black54, width: 1),
           ),
           child: TextField(
             controller: _searchController,
@@ -139,10 +140,10 @@ class _SearchScreenState extends State<SearchScreen> {
               hintStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              prefixIcon: Icon(Icons.search, color: theme.hintColor, size: 22),
+              prefixIcon: Icon(Icons.search, color: Colors.black87, size: 22),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
-                      icon: Icon(Icons.clear, color: theme.hintColor, size: 20),
+                      icon: const Icon(Icons.clear, color: Colors.black54, size: 20),
                       onPressed: () {
                         _searchController.clear();
                         _performSearch('');

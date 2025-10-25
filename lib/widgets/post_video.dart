@@ -102,8 +102,10 @@ class _PostVideoState extends State<PostVideo> {
                     backgroundColor: Colors.white12,
                   ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 6,
                   children: [
                     _ControlIcon(icon: Icons.replay_10, onTap: () => _skip(const Duration(seconds: -10))),
                     _ControlIcon(
@@ -294,11 +296,12 @@ class _FullscreenVideoPageState extends State<_FullscreenVideoPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             VideoProgressIndicator(_controller, allowScrubbing: true, padding: const EdgeInsets.symmetric(vertical: 8)),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 16,
+                              runSpacing: 8,
                               children: [
                                 _ControlIcon(icon: Icons.replay_10, onTap: () => _skip(const Duration(seconds: -10))),
-                                const SizedBox(width: 16),
                                 _ControlIcon(
                                   icon: _controller.value.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
                                   onTap: () => setState(() {
@@ -310,9 +313,7 @@ class _FullscreenVideoPageState extends State<_FullscreenVideoPage> {
                                   }),
                                   size: 44,
                                 ),
-                                const SizedBox(width: 16),
                                 _ControlIcon(icon: Icons.forward_10, onTap: () => _skip(const Duration(seconds: 10))),
-                                const SizedBox(width: 16),
                                 _ControlIcon(
                                   icon: Icons.refresh,
                                   onTap: () async {
@@ -321,7 +322,6 @@ class _FullscreenVideoPageState extends State<_FullscreenVideoPage> {
                                     setState(() {});
                                   },
                                 ),
-                                const SizedBox(width: 16),
                                 _ControlIcon(
                                   icon: _muted ? Icons.volume_off : Icons.volume_up,
                                   onTap: () => setState(() {

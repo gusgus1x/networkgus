@@ -8,6 +8,7 @@ import '../services/cloudinary_service.dart';
 
 import '../models/post_model.dart';
 import '../providers/auth_provider.dart';
+import '../providers/group_provider.dart';
 import '../providers/posts_provider.dart';
 import '../screens/post_detail_screen.dart';
 import '../screens/user_profile_screen.dart';
@@ -24,7 +25,8 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
   final theme = Theme.of(context);
   final borderColor = theme.dividerColor;
-  final bg = theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surfaceVariant.withOpacity(0.2);
+  // Use theme.cardColor so posts match the app's surface color (e.g., orange tint)
+  final bg = theme.cardColor;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -79,6 +81,36 @@ class PostCard extends StatelessWidget {
                   },
                   child: Text(post.username, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
                 ),
+                if (post.groupId != null && post.groupId!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  FutureBuilder(
+                    future: Provider.of<GroupProvider>(context, listen: false).getGroupById(post.groupId!),
+                    builder: (ctx, snap) {
+                      final name = (snap.data != null) ? (snap.data as dynamic).name as String? : null;
+                      if (snap.connectionState == ConnectionState.waiting && name == null) {
+                        return const SizedBox(height: 14, width: 60, child: LinearProgressIndicator(minHeight: 2));
+                      }
+                      if (name == null || name.isEmpty) return const SizedBox.shrink();
+                      return Container(
+                        margin: const EdgeInsets.only(top: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Theme.of(context).dividerColor),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.group, size: 14),
+                            const SizedBox(width: 4),
+                            Text(name, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ],
             ),
           ),
@@ -211,7 +243,11 @@ class PostCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.transparent, borderRadius: BorderRadius.circular(16), border: Border.all(color: borderColor, width: 1)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black26, width: 1),
+      ),
       child: Row(
         children: [
           UserAvatar(imageUrl: user?.profileImageUrl, displayName: user?.displayName ?? 'User', radius: 12),
@@ -223,7 +259,11 @@ class PostCard extends StatelessWidget {
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(color: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).cardColor, borderRadius: BorderRadius.circular(20), border: Border.all(color: borderColor, width: 1)),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.black54, width: 1),
+                ),
                 child: Text('Add a comment...', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).hintColor)),
               ),
             ),

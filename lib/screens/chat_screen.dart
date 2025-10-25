@@ -393,7 +393,12 @@ class _ChatScreenState extends State<ChatScreen> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.add, color: Colors.white70),
+                icon: Icon(
+                  Icons.add,
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? Colors.black87
+                      : Colors.white70,
+                ),
                 onPressed: () {
                   _showAttachmentOptions();
                 },
@@ -406,24 +411,47 @@ class _ChatScreenState extends State<ChatScreen> {
                     hintText: (_pendingImageBytes != null || _pendingVideoBytes != null)
                         ? 'Add a caption...'
                         : 'Type a message...',
-                    hintStyle: const TextStyle(color: Colors.white54),
+                    hintStyle: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.light
+                          ? Theme.of(context).hintColor
+                          : Colors.white54,
+                    ),
                     filled: true,
-                    fillColor: const Color(0xFF2A2A2A),
+                    fillColor: Theme.of(context).brightness == Brightness.light
+                        ? Theme.of(context).cardColor
+                        : const Color(0xFF2A2A2A),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(22),
-                      borderSide: const BorderSide(color: Color(0xFF333333)),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? Colors.black54
+                            : const Color(0xFF333333),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(22),
-                      borderSide: const BorderSide(color: Color(0xFF333333)),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? Colors.black54
+                            : const Color(0xFF333333),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(22),
-                      borderSide: const BorderSide(color: Color(0xFF6C5CE7)),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? Colors.black
+                            : const Color(0xFF6C5CE7),
+                        width: 2,
+                      ),
                     ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.light
+                        ? Colors.black
+                        : Colors.white,
+                  ),
                   maxLines: null,
                   textInputAction: TextInputAction.send,
                   onSubmitted: (_) => _sendPendingOrText(),
@@ -431,7 +459,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               const SizedBox(width: 8),
               Material(
-                color: const Color(0xFF405DE6),
+                color: Theme.of(context).colorScheme.primary,
                 shape: const CircleBorder(),
                 child: InkWell(
                   customBorder: const CircleBorder(),

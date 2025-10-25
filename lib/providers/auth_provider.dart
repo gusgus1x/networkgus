@@ -122,7 +122,13 @@ class AuthProvider with ChangeNotifier {
   // Send password reset email
   Future<bool> sendPasswordReset(String email) async {
     try {
-      await _firebaseAuth.sendPasswordResetEmail(email: email);
+      // Provide ActionCodeSettings with an explicit continueUrl to maximize deliverability
+      // and ensure the link resolves under an authorized domain.
+      final firebase_auth.ActionCodeSettings settings = firebase_auth.ActionCodeSettings(
+        url: 'https://socialnetwork-fe3dd.firebaseapp.com/reset',
+        handleCodeInApp: true,
+      );
+      await _firebaseAuth.sendPasswordResetEmail(email: email, actionCodeSettings: settings);
       return true;
     } catch (e, stackTrace) {
       debugPrint('Password reset error: $e');

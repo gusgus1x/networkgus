@@ -65,44 +65,46 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFFFF1F7), // very light pink
-              Color(0xFFFF9ECF), // pastel pink
-              Color(0xFFA8E6CF), // pastel mint
+              Color(0xFF0D0D0D), // near black
+              Color(0xFF1F1F1F), // dark grey
+              Color(0xFFFF8A00), // orange accent
             ],
-            stops: [0.0, 0.6, 1.0],
+            stops: [0.0, 0.65, 1.0],
           ),
         ),
         child: SafeArea(
-          child: Center(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-                return Padding(
-                  padding: EdgeInsets.fromLTRB(32, 32, 32, 32 + bottomInset),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+              final paddingBottom = (bottomInset > 0) ? bottomInset + 16 : 32.0;
+              return SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(32, 32, 32, paddingBottom),
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight - bottomInset),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
                   // Logo
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFFFF9ECF), Color(0xFFA8E6CF)],
+                        colors: [Color(0xFFFFA726), Color(0xFFFF7043)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFF9ECF).withOpacity(0.35),
+                          color: Colors.black.withOpacity(0.35),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -111,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: const Icon(
                       Icons.camera_alt_outlined,
                       size: 64,
-                      color: Colors.black,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -120,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Text(
                     'GorgusDekSomBun',
                     style: TextStyle(
-                      color: Colors.black,
+                      color: Colors.white,
                       fontSize: 36,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1,
@@ -132,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'Connect with friends and share your moments',
                     style: TextStyle(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.white70,
                       fontSize: 16,
                       fontWeight: FontWeight.w400,
                     ),
@@ -222,7 +224,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: _onForgotPassword,
+                              onPressed: () => Navigator.pushNamed(context, '/forgot'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFFFF8A00),
+                              ),
                               child: const Text('Forgot Password?'),
                             ),
                           ),
@@ -236,8 +241,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: ElevatedButton(
                                   onPressed: authProvider.isLoading ? null : _submit,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFFFF9ECF),
-                                    foregroundColor: Colors.black,
+                                    backgroundColor: Color(0xFFFF8A00),
+                                    foregroundColor: Colors.white,
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(25),
@@ -275,7 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withOpacity(0.06),
                       borderRadius: BorderRadius.circular(25),
                       border: Border.all(
                         color: Colors.white.withOpacity(0.3),
@@ -284,22 +289,33 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: GestureDetector(
                       onTap: () => Navigator.pushNamed(context, '/register'),
                       child: RichText(
-                        text: TextSpan(
-                          style: const TextStyle(color: Colors.black),
+                        text: const TextSpan(
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                           children: [
-                            const TextSpan(text: 'Don\'t have an account? '),
-                            const TextSpan(text: 'Sign Up', style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline, color: Colors.black)),
+                            TextSpan(text: 'Don\'t have an account? '),
+                            TextSpan(
+                              text: 'Sign Up',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                decoration: TextDecoration.underline,
+                                decorationThickness: 2.0,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ),
                   ),
-                      ],
-                    ),
+                    ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -335,43 +351,108 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 onPressed: onToggleObscure,
               ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.black26),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.black26),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFFF9ECF), width: 2),
-        ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.black54),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.black54),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.black, width: 2),
+          ),
         filled: true,
-        fillColor: Color(0xFFFFF1F7),
+        fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
   }
 
   Future<void> _onForgotPassword() async {
-    final email = _emailController.text.trim();
-    if (!RegExp(r"^[^@\s]+@[^@\s]+\.[^@\s]+").hasMatch(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your email to reset password')),
-      );
-      return;
-    }
+    await _showResetPasswordDialog(prefill: _emailController.text.trim());
+  }
 
-    final ok = await context.read<AuthProvider>().sendPasswordReset(email);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(ok
-            ? 'Password reset email sent to $email'
-            : 'Failed to send reset email'),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
+  Future<void> _showResetPasswordDialog({String? prefill}) async {
+    final controller = TextEditingController(text: prefill ?? '');
+    bool sending = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) {
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text('Reset password', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                      ),
+                      IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text("Enter your account email and we'll send a reset link."),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Spacer(),
+                      TextButton(onPressed: sending ? null : () => Navigator.pop(ctx), child: const Text('Cancel')),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: sending
+                            ? null
+                            : () async {
+                                final email = controller.text.trim();
+                                final valid = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+                                if (!valid) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Please enter a valid email address')),
+                                  );
+                                  return;
+                                }
+                                setState(() => sending = true);
+                                final ok = await context.read<AuthProvider>().sendPasswordReset(email);
+                                if (!mounted) return;
+                                Navigator.pop(ctx);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(ok
+                                        ? 'Password reset email sent to $email'
+                                        : 'Failed to send reset email'),
+                                    behavior: SnackBarBehavior.floating,
+                                    margin: const EdgeInsets.all(16),
+                                  ),
+                                );
+                              },
+                        child: sending
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Text('Send'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -4,12 +4,15 @@ class UserAvatar extends StatelessWidget {
   final String? imageUrl;
   final String displayName;
   final double radius;
+  // When true, avatar background follows theme primary color.
+  final bool useThemePrimary;
 
   const UserAvatar({
     Key? key,
     this.imageUrl,
     required this.displayName,
     this.radius = 20,
+    this.useThemePrimary = true,
   }) : super(key: key);
 
   @override
@@ -28,9 +31,11 @@ class UserAvatar extends StatelessWidget {
     // Show initials if no image URL or image fails to load
     final initials = _getInitials(displayName);
     
+    final theme = Theme.of(context);
+    final bg = useThemePrimary ? theme.colorScheme.primary : _getColorFromName(displayName);
     return CircleAvatar(
       radius: radius,
-      backgroundColor: _getColorFromName(displayName),
+      backgroundColor: bg,
       child: Text(
         initials,
         style: TextStyle(
@@ -74,7 +79,7 @@ class UserAvatar extends StatelessWidget {
       Colors.grey.shade600,
       Colors.black87,
     ];
-    
+
     final hash = name.hashCode;
     return colors[hash.abs() % colors.length];
   }

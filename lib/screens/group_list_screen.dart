@@ -12,57 +12,137 @@ class _CreateGroupDialog extends StatefulWidget {
 
 class _CreateGroupDialogState extends State<_CreateGroupDialog> {
   final _formKey = GlobalKey<FormState>();
-  String _name = '';
-  String _description = '';
+  final TextEditingController _nameCtrl = TextEditingController();
+  final TextEditingController _descCtrl = TextEditingController();
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _descCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() => _submitting = true);
+    try {
+      final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+      final currentUserId = Provider.of<AuthProvider>(context, listen: false).currentUser?.id ?? '';
+      await groupProvider.createGroup(
+        Group(
+          id: '',
+          name: _nameCtrl.text.trim(),
+          description: _descCtrl.text.trim(),
+          ownerId: currentUserId,
+          members: [currentUserId],
+          postIds: [],
+          createdAt: DateTime.now(),
+        ),
+      );
+      if (mounted) Navigator.pop(context);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Create Group'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              decoration: const InputDecoration(labelText: 'Group Name'),
-              validator: (value) => value == null || value.isEmpty ? 'Enter group name' : null,
-              onChanged: (value) => setState(() => _name = value),
+    final theme = Theme.of(context);
+    final borderRadius = BorderRadius.circular(16);
+    final inputBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: theme.dividerColor),
+    );
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: borderRadius),
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Create Group',
+                          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Close',
+                        icon: const Icon(Icons.close),
+                        onPressed: _submitting ? null : () => Navigator.pop(context),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _nameCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Group Name',
+                      filled: true,
+                      isDense: true,
+                      border: inputBorder,
+                      enabledBorder: inputBorder,
+                      focusedBorder: inputBorder.copyWith(
+                        borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+                      ),
+                    ),
+                    textInputAction: TextInputAction.next,
+                    maxLength: 40,
+                    validator: (value) => (value == null || value.trim().isEmpty) ? 'Enter group name' : null,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _descCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Description',
+                      filled: true,
+                      isDense: true,
+                      border: inputBorder,
+                      enabledBorder: inputBorder,
+                      focusedBorder: inputBorder.copyWith(
+                        borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+                      ),
+                    ),
+                    maxLines: 3,
+                    minLines: 2,
+                    maxLength: 140,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Spacer(),
+                      TextButton(
+                        onPressed: _submitting ? null : () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: _submitting ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        ),
+                        child: _submitting
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Text('Create'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            TextFormField(
-              decoration: const InputDecoration(labelText: 'Description'),
-              onChanged: (value) => setState(() => _description = value),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            if (_formKey.currentState?.validate() ?? false) {
-              final groupProvider = Provider.of<GroupProvider>(context, listen: false);
-              final currentUserId = Provider.of<AuthProvider>(context, listen: false).currentUser?.id ?? '';
-              await groupProvider.createGroup(
-                Group(
-                  id: '', // Firestore will generate
-                  name: _name,
-                  description: _description,
-                  ownerId: currentUserId, // set current user id
-                  members: [currentUserId],
-                  postIds: [],
-                  createdAt: DateTime.now(),
-                ),
-              );
-              Navigator.pop(context);
-            }
-          },
-          child: const Text('Create'),
-        ),
-      ],
     );
   }
 }

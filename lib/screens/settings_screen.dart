@@ -28,7 +28,7 @@ class SettingsScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: [
-              Icon(icon, color: selected ? const Color(0xFF6C5CE7) : theme.iconTheme.color),
+              Icon(icon, color: selected ? theme.colorScheme.primary : theme.iconTheme.color),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -47,7 +47,7 @@ class SettingsScreen extends StatelessWidget {
                 value: value,
                 groupValue: mode,
                 onChanged: (_) => setMode(value),
-                activeColor: const Color(0xFF6C5CE7),
+                activeColor: theme.colorScheme.primary,
               ),
             ],
           ),

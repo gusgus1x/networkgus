@@ -781,6 +781,18 @@ class PostService {
     required String groupId,
   }) async {
     try {
+      // Validate that the user is a member of the group before posting
+      final groupDoc = await _firestore.collection('groups').doc(groupId).get();
+      if (!groupDoc.exists) {
+        throw Exception('Group not found');
+      }
+      final data = groupDoc.data() as Map<String, dynamic>;
+      final List<dynamic> rawMembers = (data['members'] ?? []) as List<dynamic>;
+      final members = rawMembers.map((e) => e.toString()).toList();
+      if (!members.contains(userId)) {
+        throw Exception('Only group members can post');
+      }
+
       List<String> uploadedImageUrls = [];
 
       if (imageFiles != null && imageFiles.isNotEmpty) {
