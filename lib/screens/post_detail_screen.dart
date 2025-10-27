@@ -384,8 +384,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        // Use the input fill color from theme to keep light mode white
         color: Theme.of(context).inputDecorationTheme.fillColor ??
-            Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.2),
+            Theme.of(context).cardColor,
       ),
       child: Row(
         children: [
@@ -404,18 +405,20 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 hintStyle: TextStyle(color: Theme.of(context).hintColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(color: Colors.black54),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(color: Colors.black54),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(color: Colors.black, width: 2),
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
                 ),
                 filled: true,
-                fillColor: Theme.of(context).cardColor,
+                // Respect theme-level input fill (white in light, dark surface in dark)
+                fillColor: Theme.of(context).inputDecorationTheme.fillColor ??
+                    Theme.of(context).cardColor,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
               maxLines: null,

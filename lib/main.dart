@@ -37,8 +37,8 @@ class MyApp extends StatelessWidget {
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
-          // Light theme (orange accent on light surfaces)
-          final orangeLight = ThemeData(
+          // Light theme option 1: white surfaces with orange accents (for ThemeMode.light)
+          final whiteLight = ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
               seedColor: const Color(0xFFFF8A00),
@@ -47,20 +47,20 @@ class MyApp extends StatelessWidget {
               primary: const Color(0xFFFF8A00),
               secondary: const Color(0xFFFFA726),
             ),
-            // Soft orange background for the whole app in light mode
-            scaffoldBackgroundColor: const Color(0xFFFFF3E0), // Orange 50
+            // Use pure white for light surfaces
+            scaffoldBackgroundColor: Colors.white,
             appBarTheme: const AppBarTheme(
-              backgroundColor: Color(0xFFFFF3E0),
+              backgroundColor: Colors.white,
               foregroundColor: Colors.black,
               elevation: 0,
               centerTitle: false,
               iconTheme: IconThemeData(color: Colors.black87),
             ),
-            // Card surfaces use a soft orange tint to match theme
-            cardColor: const Color(0xFFFFF8E1),
-            inputDecorationTheme: InputDecorationTheme(
+            // Cards and sheets also white in light mode
+            cardColor: Colors.white,
+            inputDecorationTheme: const InputDecorationTheme(
               filled: true,
-              fillColor: Colors.white,
+              fillColor: Colors.white, // inputs white in Light
             ),
             textTheme: const TextTheme(
               bodyMedium: TextStyle(color: Colors.black87),
@@ -69,8 +69,8 @@ class MyApp extends StatelessWidget {
             ),
             iconTheme: const IconThemeData(color: Colors.black87),
             bottomNavigationBarTheme: BottomNavigationBarThemeData(
-              // Match light theme surfaces
-              backgroundColor: const Color(0xFFFFF8E1), // same as cardColor
+              // Match white surfaces
+              backgroundColor: Colors.white,
               selectedItemColor: const Color(0xFFFF8A00),
               selectedIconTheme: const IconThemeData(color: Color(0xFFFF8A00)),
               selectedLabelStyle: const TextStyle(color: Color(0xFFFF8A00), fontWeight: FontWeight.w600),
@@ -81,13 +81,61 @@ class MyApp extends StatelessWidget {
               type: BottomNavigationBarType.fixed,
               elevation: 0,
             ),
-            // Slightly stronger divider so cards/composer outlines are clearer
+            // Light divider for white surfaces
+            dividerColor: Colors.black12,
+          );
+
+          // Light theme option 2: soft orange-tinted light surfaces (for ThemeMode.system)
+          final orangeLight = ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFFFF8A00),
+              brightness: Brightness.light,
+            ).copyWith(
+              primary: const Color(0xFFFF8A00),
+              secondary: const Color(0xFFFFA726),
+            ),
+            scaffoldBackgroundColor: const Color(0xFFFFF3E0), // Orange 50
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFFFFF3E0),
+              foregroundColor: Colors.black,
+              elevation: 0,
+              centerTitle: false,
+              iconTheme: IconThemeData(color: Colors.black87),
+            ),
+            cardColor: const Color(0xFFFFF8E1),
+            // Inputs use soft-cream to match orangeLight surfaces
+            inputDecorationTheme: const InputDecorationTheme(
+              filled: true,
+              fillColor: Color(0xFFFFF8E1),
+            ),
+            textTheme: const TextTheme(
+              bodyMedium: TextStyle(color: Colors.black87),
+              bodyLarge: TextStyle(color: Colors.black87),
+              titleLarge: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            ),
+            iconTheme: const IconThemeData(color: Colors.black87),
+            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+              backgroundColor: Color(0xFFFFF8E1),
+              selectedItemColor: Color(0xFFFF8A00),
+              selectedIconTheme: IconThemeData(color: Color(0xFFFF8A00)),
+              selectedLabelStyle: TextStyle(color: Color(0xFFFF8A00), fontWeight: FontWeight.w600),
+              unselectedItemColor: Colors.black54,
+              unselectedIconTheme: IconThemeData(color: Colors.black54),
+              unselectedLabelStyle: TextStyle(color: Colors.black54),
+              showUnselectedLabels: true,
+              type: BottomNavigationBarType.fixed,
+              elevation: 0,
+            ),
             dividerColor: Colors.black26,
           );
-          final effectiveLight = orangeLight;
+
+          // If user forces Light -> use whiteLight, otherwise (System) use orangeLight
+          final effectiveLight =
+              themeProvider.themeMode == ThemeMode.light ? whiteLight : orangeLight;
 
           return MaterialApp(
-            title: 'SocialNetwork',
+            title: 'DekSomBun',
             themeMode: themeProvider.themeMode,
             theme: effectiveLight,
           // Dark theme keeps palette but on dark surfaces
@@ -110,6 +158,11 @@ class MyApp extends StatelessWidget {
               iconTheme: IconThemeData(color: Colors.white70),
             ),
             cardColor: const Color(0xFF1A1A1A),
+            // Inputs use dark surfaces in Dark
+            inputDecorationTheme: const InputDecorationTheme(
+              filled: true,
+              fillColor: Color(0xFF1A1A1A),
+            ),
             textTheme: const TextTheme(
               bodyMedium: TextStyle(color: Colors.white70),
               bodyLarge: TextStyle(color: Colors.white70),

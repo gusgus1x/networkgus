@@ -285,13 +285,21 @@ class _ChatScreenState extends State<ChatScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E),
+            color: Theme.of(context).brightness == Brightness.light
+                ? Theme.of(context).cardColor
+                : const Color(0xFF1E1E1E),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF2A2A2A)),
+            border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5)),
           ),
           child: Text(
             dateText,
-            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 11, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.light
+                  ? Colors.black54
+                  : Colors.white.withOpacity(0.7),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ),
@@ -301,9 +309,13 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildMessageInput() {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E1E1E),
-        border: Border(top: BorderSide(color: Color(0xFF2A2A2A))),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.light
+            ? (Theme.of(context).appBarTheme.backgroundColor ?? Colors.white)
+            : const Color(0xFF1A1A1A),
+        border: Border(
+          top: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.6)),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

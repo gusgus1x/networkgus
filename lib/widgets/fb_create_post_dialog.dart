@@ -271,18 +271,19 @@ class _FBCreatePostDialogState extends State<FBCreatePostDialog> {
                           hintStyle: theme.textTheme.titleMedium?.copyWith(color: theme.hintColor),
                           isCollapsed: false,
                           filled: true,
-                          fillColor: Colors.white,
+                          // Respect theme input surface per theme
+                          fillColor: theme.inputDecorationTheme.fillColor ?? theme.cardColor,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.black54),
+                            borderSide: BorderSide(color: theme.dividerColor),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.black54),
+                            borderSide: BorderSide(color: theme.dividerColor),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.black, width: 2),
+                            borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
                           ),
                           contentPadding: const EdgeInsets.all(12),
                         ),

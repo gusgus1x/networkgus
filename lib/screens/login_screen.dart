@@ -120,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   
                   // App Name
                   const Text(
-                    'GorgusDekSomBun',
+                    'DekSomBun',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 36,

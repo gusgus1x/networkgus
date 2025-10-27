@@ -47,7 +47,8 @@ class PostComposer extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
-                      color: theme.cardColor,
+                      // Match input fields: white in light, dark surface in dark
+                      color: theme.inputDecorationTheme.fillColor ?? theme.cardColor,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: borderColor, width: 1.0),
                     ),

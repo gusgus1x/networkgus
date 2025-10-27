@@ -105,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: const Icon(Icons.camera_alt_outlined, size: 64, color: Colors.white),
                         ),
                         const SizedBox(height: 24),
-                        const Text('SocialNetwork', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w700, letterSpacing: 1)),
+                        const Text('DekSomBun', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w700, letterSpacing: 1)),
                         const SizedBox(height: 8),
                         const Text('Create your account', style: TextStyle(color: Colors.white70, fontSize: 16)),
                         const SizedBox(height: 40),

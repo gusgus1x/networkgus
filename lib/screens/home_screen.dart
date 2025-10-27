@@ -105,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          'Welcome to Social Network!',
+                          'Welcome to DekSomBun!',
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.white,
@@ -211,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Icon(Icons.camera_alt_outlined, color: theme.colorScheme.onPrimary, size: 20),
             ),
             const SizedBox(width: 12),
-            Text('SocialNetwork', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+            Text('DekSomBun', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.5)),
           ],
         ),
         // Remove actions to avoid overflow on compact screens
