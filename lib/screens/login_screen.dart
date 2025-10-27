@@ -224,7 +224,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () => Navigator.pushNamed(context, '/forgot'),
+                              onPressed: _onForgotPassword,
                               style: TextButton.styleFrom(
                                 foregroundColor: const Color(0xFFFF8A00),
                               ),
