@@ -12,15 +12,18 @@ class AuthProvider with ChangeNotifier {
   User? _currentUser;
   bool _isLoading = false;
   bool _isLoggedIn = false;
+  String? _lastError;
 
   User? get currentUser => _currentUser;
   firebase_auth.User? get user => _firebaseAuth.currentUser;
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _isLoggedIn;
+  String? get lastError => _lastError;
 
   // Firebase login function
   Future<bool> login(String email, String password) async {
     try {
+      _lastError = null;
       _isLoading = true;
       notifyListeners();
 
@@ -41,6 +44,7 @@ class AuthProvider with ChangeNotifier {
     } catch (e, stackTrace) {
       debugPrint('Login error: $e');
       debugPrintStack(stackTrace: stackTrace);
+      _lastError = e.toString();
       _isLoading = false;
       notifyListeners();
     }
@@ -51,6 +55,7 @@ class AuthProvider with ChangeNotifier {
   // Firebase signup function
   Future<bool> signUp(String email, String password, String displayName, String username) async {
     try {
+      _lastError = null;
       _isLoading = true;
       notifyListeners();
 
@@ -91,6 +96,7 @@ class AuthProvider with ChangeNotifier {
     } catch (e, stackTrace) {
       debugPrint('Signup error: $e');
       debugPrintStack(stackTrace: stackTrace);
+      _lastError = e.toString();
       _isLoading = false;
       notifyListeners();
     }
@@ -125,7 +131,7 @@ class AuthProvider with ChangeNotifier {
       // Provide ActionCodeSettings with an explicit continueUrl to maximize deliverability
       // and ensure the link resolves under an authorized domain.
       final firebase_auth.ActionCodeSettings settings = firebase_auth.ActionCodeSettings(
-        url: 'https://socialnetwork-fe3dd.firebaseapp.com/reset',
+        url: 'https://deksombun-9eba1.firebaseapp.com/reset',
         handleCodeInApp: true,
       );
       await _firebaseAuth.sendPasswordResetEmail(email: email, actionCodeSettings: settings);
@@ -133,6 +139,7 @@ class AuthProvider with ChangeNotifier {
     } catch (e, stackTrace) {
       debugPrint('Password reset error: $e');
       debugPrintStack(stackTrace: stackTrace);
+      _lastError = e.toString();
       return false;
     }
   }

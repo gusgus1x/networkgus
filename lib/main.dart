@@ -18,6 +18,11 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // Log the active Firebase project for quick verification in console
+  // Example output: Using Firebase project: deksombun-9eba1
+  // This helps confirm the app points to the intended project after reconfiguration.
+  // ignore: avoid_print
+  print('Using Firebase project: ' + DefaultFirebaseOptions.currentPlatform.projectId);
   runApp(const MyApp());
 }
 

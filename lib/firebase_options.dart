@@ -41,49 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDmu725y8CnyIBuuJZziRPSJd0Z4EVSZ6Q',
-    appId: '1:907003888549:web:50609ca5a2693e1b375e4c',
-    messagingSenderId: '907003888549',
-    projectId: 'socialnetwork-fe3dd',
-    authDomain: 'socialnetwork-fe3dd.firebaseapp.com',
-    storageBucket: 'socialnetwork-fe3dd.firebasestorage.app',
-    measurementId: 'G-S022M3SVGN',
+    apiKey: 'AIzaSyB3smFhdT2XGmb7BhsIjK1zmJ0U6FCp3c8',
+    appId: '1:903187015707:web:61928d5552d030115130be',
+    messagingSenderId: '903187015707',
+    projectId: 'deksombun-9eba1',
+    authDomain: 'deksombun-9eba1.firebaseapp.com',
+    storageBucket: 'deksombun-9eba1.firebasestorage.app',
+    measurementId: 'G-L66RRCXYQ7',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAbn1YO2etP-pAA3jPQJcYQNlX8hNFE_Do',
-    appId: '1:907003888549:android:dbabb32b587946cc375e4c',
-    messagingSenderId: '907003888549',
-    projectId: 'socialnetwork-fe3dd',
-    storageBucket: 'socialnetwork-fe3dd.firebasestorage.app',
+    apiKey: 'AIzaSyDud0saTz_GyhiSglX5ABNLVqA_KS66Vzk',
+    appId: '1:903187015707:android:d093117a60ab414f5130be',
+    messagingSenderId: '903187015707',
+    projectId: 'deksombun-9eba1',
+    storageBucket: 'deksombun-9eba1.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyB7zTIVJzMgnxksrOEnW4I1LJNx0S_4Rh4',
-    appId: '1:907003888549:ios:b4edcb91e4a7321c375e4c',
-    messagingSenderId: '907003888549',
-    projectId: 'socialnetwork-fe3dd',
-    storageBucket: 'socialnetwork-fe3dd.firebasestorage.app',
+    apiKey: 'AIzaSyCWjJGKUmVVNgYCv0Lr53xJRtYOGwFhnP8',
+    appId: '1:903187015707:ios:d43e9532f593a8705130be',
+    messagingSenderId: '903187015707',
+    projectId: 'deksombun-9eba1',
+    storageBucket: 'deksombun-9eba1.firebasestorage.app',
     iosBundleId: 'com.example.socialnetwork1',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyB7zTIVJzMgnxksrOEnW4I1LJNx0S_4Rh4',
-    appId: '1:907003888549:ios:b4edcb91e4a7321c375e4c',
-    messagingSenderId: '907003888549',
-    projectId: 'socialnetwork-fe3dd',
-    storageBucket: 'socialnetwork-fe3dd.firebasestorage.app',
+    apiKey: 'AIzaSyCWjJGKUmVVNgYCv0Lr53xJRtYOGwFhnP8',
+    appId: '1:903187015707:ios:d43e9532f593a8705130be',
+    messagingSenderId: '903187015707',
+    projectId: 'deksombun-9eba1',
+    storageBucket: 'deksombun-9eba1.firebasestorage.app',
     iosBundleId: 'com.example.socialnetwork1',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDmu725y8CnyIBuuJZziRPSJd0Z4EVSZ6Q',
-    appId: '1:907003888549:web:b23ad2b8e16af99c375e4c',
-    messagingSenderId: '907003888549',
-    projectId: 'socialnetwork-fe3dd',
-    authDomain: 'socialnetwork-fe3dd.firebaseapp.com',
-    storageBucket: 'socialnetwork-fe3dd.firebasestorage.app',
-    measurementId: 'G-FJKR65S2LG',
+    apiKey: 'AIzaSyB3smFhdT2XGmb7BhsIjK1zmJ0U6FCp3c8',
+    appId: '1:903187015707:web:7939adf28ed8af945130be',
+    messagingSenderId: '903187015707',
+    projectId: 'deksombun-9eba1',
+    authDomain: 'deksombun-9eba1.firebaseapp.com',
+    storageBucket: 'deksombun-9eba1.firebasestorage.app',
+    measurementId: 'G-LXR6ZPV2E6',
   );
 
 }

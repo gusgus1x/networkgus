@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "907003888549",
-    "project_id": "socialnetwork-fe3dd",
-    "storage_bucket": "socialnetwork-fe3dd.firebasestorage.app"
+    "project_number": "903187015707",
+    "project_id": "deksombun-9eba1",
+    "storage_bucket": "deksombun-9eba1.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:907003888549:android:dbabb32b587946cc375e4c",
+        "mobilesdk_app_id": "1:903187015707:android:d093117a60ab414f5130be",
         "android_client_info": {
           "package_name": "com.example.socialnetwork1"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAbn1YO2etP-pAA3jPQJcYQNlX8hNFE_Do"
+          "current_key": "AIzaSyDud0saTz_GyhiSglX5ABNLVqA_KS66Vzk"
         }
       ],
       "services": {

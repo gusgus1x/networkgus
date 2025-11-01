@@ -16,9 +16,103 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   final _displayNameController = TextEditingController();
   final _usernameController = TextEditingController();
+  final FocusNode _passwordFocusNode = FocusNode();
+  final FocusNode _fullNameFocusNode = FocusNode();
+  final FocusNode _usernameFocusNode = FocusNode();
+  final FocusNode _emailFocusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _passwordFieldKey = GlobalKey();
+  final GlobalKey _fullNameFieldKey = GlobalKey();
+  final GlobalKey _usernameFieldKey = GlobalKey();
+  final GlobalKey _emailFieldKey = GlobalKey();
+
+  bool _showPasswordTips = false;
+  bool _showFullNameTips = false;
+  bool _showUsernameTips = false;
+  bool _showEmailTips = false;
 
   bool _passwordObscured = true;
   bool _confirmPasswordObscured = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordFocusNode.addListener(() {
+      if (_passwordFocusNode.hasFocus) {
+        setState(() => _showPasswordTips = true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final ctx = _passwordFieldKey.currentContext;
+          if (ctx != null) {
+            Scrollable.ensureVisible(
+              ctx,
+              duration: const Duration(milliseconds: 300),
+              alignment: 0.2,
+              curve: Curves.easeInOut,
+            );
+          }
+        });
+      } else {
+        setState(() => _showPasswordTips = false);
+      }
+    });
+
+    _fullNameFocusNode.addListener(() {
+      if (_fullNameFocusNode.hasFocus) {
+        setState(() => _showFullNameTips = true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final ctx = _fullNameFieldKey.currentContext;
+          if (ctx != null) {
+            Scrollable.ensureVisible(
+              ctx,
+              duration: const Duration(milliseconds: 300),
+              alignment: 0.2,
+              curve: Curves.easeInOut,
+            );
+          }
+        });
+      } else {
+        setState(() => _showFullNameTips = false);
+      }
+    });
+
+    _usernameFocusNode.addListener(() {
+      if (_usernameFocusNode.hasFocus) {
+        setState(() => _showUsernameTips = true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final ctx = _usernameFieldKey.currentContext;
+          if (ctx != null) {
+            Scrollable.ensureVisible(
+              ctx,
+              duration: const Duration(milliseconds: 300),
+              alignment: 0.2,
+              curve: Curves.easeInOut,
+            );
+          }
+        });
+      } else {
+        setState(() => _showUsernameTips = false);
+      }
+    });
+
+    _emailFocusNode.addListener(() {
+      if (_emailFocusNode.hasFocus) {
+        setState(() => _showEmailTips = true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final ctx = _emailFieldKey.currentContext;
+          if (ctx != null) {
+            Scrollable.ensureVisible(
+              ctx,
+              duration: const Duration(milliseconds: 300),
+              alignment: 0.2,
+              curve: Curves.easeInOut,
+            );
+          }
+        });
+      } else {
+        setState(() => _showEmailTips = false);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -27,6 +121,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _confirmPasswordController.dispose();
     _displayNameController.dispose();
     _usernameController.dispose();
+    _passwordFocusNode.dispose();
+    _fullNameFocusNode.dispose();
+    _usernameFocusNode.dispose();
+    _emailFocusNode.dispose();
     super.dispose();
   }
 
@@ -46,8 +144,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         // AppWrapper will navigate to Home when auth changes; pop this screen
         Navigator.pop(context);
       } else {
+        final err = authProvider.lastError ?? 'Sign up failed. Please try again.';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sign up failed. Please try again.'), backgroundColor: Colors.red),
+          SnackBar(content: Text(err), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
@@ -83,6 +182,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               return SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
                 keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                controller: _scrollController,
                 padding: EdgeInsets.fromLTRB(32, 32, 32, paddingBottom),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: constraints.maxHeight - bottomInset),
@@ -131,50 +231,153 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 const SizedBox(height: 32),
 
                                 _buildTextField(
+                                  fieldKey: _fullNameFieldKey,
                                   controller: _displayNameController,
                                   label: 'Full Name',
+                                  hintText: 'e.g., John Appleseed',
                                   icon: Icons.person_outline,
+                                  focusNode: _fullNameFocusNode,
                                   validator: (value) {
                                     if (value == null || value.trim().isEmpty) return 'Please enter your full name';
                                     return null;
                                   },
                                 ),
+                                const SizedBox(height: 8),
+                                if (_showFullNameTips)
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: const Color(0xFFFF8A00).withOpacity(0.4)),
+                                    ),
+                                    child: const Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Full name tips', style: TextStyle(fontWeight: FontWeight.w700)),
+                                        SizedBox(height: 8),
+                                        Text('• Use your real name'),
+                                        SizedBox(height: 4),
+                                        Text('• Example: John Appleseed'),
+                                      ],
+                                    ),
+                                  ),
                                 const SizedBox(height: 16),
                                 _buildTextField(
+                                  fieldKey: _usernameFieldKey,
                                   controller: _usernameController,
                                   label: 'Username',
+                                  hintText: 'e.g., johnny_99',
                                   icon: Icons.alternate_email,
+                                  focusNode: _usernameFocusNode,
                                   validator: (value) {
                                     if (value == null || value.trim().isEmpty) return 'Please enter a username';
                                     if (value.contains(' ')) return 'Username cannot contain spaces';
                                     return null;
                                   },
                                 ),
+                                const SizedBox(height: 8),
+                                if (_showUsernameTips)
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: const Color(0xFFFF8A00).withOpacity(0.4)),
+                                    ),
+                                    child: const Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Username tips', style: TextStyle(fontWeight: FontWeight.w700)),
+                                        SizedBox(height: 8),
+                                        Text('• 3–20 characters'),
+                                        SizedBox(height: 4),
+                                        Text('• Letters, numbers, underscores; no spaces'),
+                                        SizedBox(height: 4),
+                                        Text('• Example: johnny_99'),
+                                      ],
+                                    ),
+                                  ),
                                 const SizedBox(height: 16),
                                 _buildTextField(
+                                  fieldKey: _emailFieldKey,
                                   controller: _emailController,
                                   label: 'Email',
+                                  hintText: 'e.g., name@example.com',
                                   icon: Icons.email_outlined,
                                   keyboardType: TextInputType.emailAddress,
+                                  focusNode: _emailFocusNode,
                                   validator: (value) {
                                     if (value == null || value.trim().isEmpty) return 'Please enter your email';
                                     if (!RegExp(r"^[^@\s]+@[^@\s]+\.[^@\s]+").hasMatch(value)) return 'Please enter a valid email';
                                     return null;
                                   },
                                 ),
+                                const SizedBox(height: 8),
+                                if (_showEmailTips)
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: const Color(0xFFFF8A00).withOpacity(0.4)),
+                                    ),
+                                    child: const Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Email tips', style: TextStyle(fontWeight: FontWeight.w700)),
+                                        SizedBox(height: 8),
+                                        Text('• Use a valid address you can access'),
+                                        SizedBox(height: 4),
+                                        Text('• Example: name@example.com'),
+                                      ],
+                                    ),
+                                  ),
                                 const SizedBox(height: 16),
                                 _buildTextField(
+                                  fieldKey: _passwordFieldKey,
                                   controller: _passwordController,
                                   label: 'Password',
                                   icon: Icons.lock_outline,
                                   obscureText: _passwordObscured,
+                                  focusNode: _passwordFocusNode,
                                   onToggleObscure: () => setState(() => _passwordObscured = !_passwordObscured),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) return 'Please enter your password';
                                     if (value.length < 6) return 'Password must be at least 6 characters';
+                                    final hasUppercase = RegExp(r'[A-Z]').hasMatch(value);
+                                    final hasSpecial = RegExp(r'[!@#\$%^&*(),.?":{}|<>_\-\\/\[\]~+=]').hasMatch(value);
+                                    if (!hasUppercase) return 'Password must contain at least one uppercase letter';
+                                    if (!hasSpecial) return 'Password must contain at least one special character';
                                     return null;
                                   },
                                 ),
+                                const SizedBox(height: 8),
+                                if (_showPasswordTips)
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: const Color(0xFFFF8A00).withOpacity(0.4)),
+                                    ),
+                                    child: const Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Password requirements', style: TextStyle(fontWeight: FontWeight.w700)),
+                                        SizedBox(height: 8),
+                                        Text('• At least 6 characters'),
+                                        SizedBox(height: 4),
+                                        Text('• At least 1 uppercase letter (A–Z)'),
+                                        SizedBox(height: 4),
+                                        Text('• At least 1 special character (e.g. ! @ # \$ %)'),
+                                      ],
+                                    ),
+                                  ),
                                 const SizedBox(height: 16),
                                 _buildTextField(
                                   controller: _confirmPasswordController,
@@ -263,25 +466,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  // (Popup version removed per request)
+
   Widget _buildTextField({
+    Key? fieldKey,
     required TextEditingController controller,
     required String label,
     required IconData icon,
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
+    String? helperText,
+    String? hintText,
+    FocusNode? focusNode,
+    VoidCallback? onTap,
     VoidCallback? onToggleObscure,
   }) {
     return TextFormField(
+      key: fieldKey,
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
+      focusNode: focusNode,
+      onTap: onTap,
       style: const TextStyle(color: Colors.black),
       cursorColor: Colors.black,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.black87),
+        hintText: hintText,
+        hintStyle: const TextStyle(color: Colors.black45),
+        helperText: helperText,
+        helperMaxLines: 3,
+        helperStyle: const TextStyle(color: Colors.black54, fontSize: 12),
         prefixIcon: Icon(icon, color: Colors.black87),
         suffixIcon: onToggleObscure == null
             ? null
@@ -299,4 +517,3 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
-
