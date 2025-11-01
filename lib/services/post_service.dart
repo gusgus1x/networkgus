@@ -333,7 +333,7 @@ class PostService {
   }
 
   // Like post
-  Future<void> likePost(String postId, String userId) async {
+  Future<void> likePost(String postId, String userId, {String? ownerId}) async {
     try {
       final WriteBatch batch = _firestore.batch();
 
@@ -353,6 +353,33 @@ class PostService {
       batch.update(postRef, {'likesCount': FieldValue.increment(1)});
 
       await batch.commit();
+
+      // Write notification for post owner so it shows immediately
+      try {
+        String? targetOwnerId = ownerId;
+        if (targetOwnerId == null || targetOwnerId.isEmpty) {
+          final postSnap = await postRef.get();
+          targetOwnerId = (postSnap.data() as Map<String, dynamic>?)?['userId'] as String?;
+        }
+        if (targetOwnerId != null && targetOwnerId.isNotEmpty && targetOwnerId != userId) {
+          final likerSnap = await _firestore.collection('users').doc(userId).get();
+          final senderName = (likerSnap.data() as Map<String, dynamic>?)?['displayName'] as String?;
+          await _firestore
+              .collection('users')
+              .doc(targetOwnerId)
+              .collection('notifications')
+              .add({
+            'type': 'like',
+            'postId': postId,
+            'userId': userId,
+            'senderName': senderName,
+            'createdAt': DateTime.now().toUtc(),
+            'read': false,
+          });
+        }
+      } catch (e) {
+        debugPrint('Like notification write error: ' + e.toString());
+      }
     } catch (e) {
       debugPrint('Like post error: $e');
       throw Exception('Failed to like post');

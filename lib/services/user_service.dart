@@ -361,6 +361,26 @@ class UserService {
       });
 
       await batch.commit();
+
+      // Write notification for target user (client-side fanout)
+      try {
+        final currentUserSnap = await _usersCollection.doc(currentUserId).get();
+        final senderName = (currentUserSnap.data() as Map<String, dynamic>?)?['displayName'] as String?;
+        await _firestore
+            .collection('users')
+            .doc(targetUserId)
+            .collection('notifications')
+            .add({
+          'type': 'follow',
+          'userId': currentUserId,
+          'senderName': senderName,
+          // Use client timestamp for immediate visibility without waiting for server roundtrip
+          'createdAt': DateTime.now().toUtc(),
+          'read': false,
+        });
+      } catch (e) {
+        debugPrint('Follow notification write error: $e');
+      }
     } catch (e) {
       debugPrint('Follow user error: $e');
       throw Exception('Failed to follow user');

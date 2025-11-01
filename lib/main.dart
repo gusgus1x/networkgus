@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as r;
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
@@ -11,7 +12,10 @@ import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/forgot_password_screen.dart';
+import 'screens/edit_profile_screen.dart';
+import 'screens/notification_screen.dart';
 import 'providers/theme_provider.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,11 +27,15 @@ void main() async {
   // This helps confirm the app points to the intended project after reconfiguration.
   // ignore: avoid_print
   print('Using Firebase project: ' + DefaultFirebaseOptions.currentPlatform.projectId);
-  runApp(const MyApp());
+  // Initialize notifications and provide a global navigator key for deep links
+  final navigatorKey = GlobalKey<NavigatorState>();
+  await NotificationService.instance.init(navigatorKey: navigatorKey);
+  runApp(r.ProviderScope(child: MyApp(navigatorKey: navigatorKey)));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final GlobalKey<NavigatorState> navigatorKey;
+  const MyApp({super.key, required this.navigatorKey});
 
   @override
   Widget build(BuildContext context) {
@@ -188,11 +196,14 @@ class MyApp extends StatelessWidget {
             dividerColor: Colors.white10,
           ),
             debugShowCheckedModeBanner: false,
+            navigatorKey: navigatorKey,
             home: const AppWrapper(),
             routes: {
               '/login': (context) => const LoginScreen(),
               '/register': (context) => const RegisterScreen(),
               '/forgot': (context) => const ForgotPasswordScreen(),
+              '/notifications': (context) => const NotificationScreen(),
+              '/edit-profile': (context) => const EditProfileScreen(),
               '/home': (context) => const HomeScreen(),
             },
           );

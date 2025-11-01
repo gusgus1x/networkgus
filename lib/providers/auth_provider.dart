@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import '../services/user_service.dart';
+import '../services/notification_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final firebase_auth.FirebaseAuth _firebaseAuth = firebase_auth.FirebaseAuth.instance;
@@ -199,6 +200,8 @@ class AuthProvider with ChangeNotifier {
       if (user != null) {
         await _loadUserData(user.uid);
         _isLoggedIn = true;
+        // Sync FCM token on auth state ready
+        await NotificationService.instance.syncToken();
       } else {
         _currentUser = null;
         _isLoggedIn = false;

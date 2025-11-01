@@ -371,90 +371,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _onForgotPassword() async {
-    await _showResetPasswordDialog(prefill: _emailController.text.trim());
-  }
-
-  Future<void> _showResetPasswordDialog({String? prefill}) async {
-    final controller = TextEditingController(text: prefill ?? '');
-    bool sending = false;
-
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) {
-          return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: Text('Reset password', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-                      ),
-                      IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text("Enter your account email and we'll send a reset link."),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: controller,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      const Spacer(),
-                      TextButton(onPressed: sending ? null : () => Navigator.pop(ctx), child: const Text('Cancel')),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: sending
-                            ? null
-                            : () async {
-                                final email = controller.text.trim();
-                                final valid = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
-                                if (!valid) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Please enter a valid email address')),
-                                  );
-                                  return;
-                                }
-                                setState(() => sending = true);
-                                final ok = await context.read<AuthProvider>().sendPasswordReset(email);
-                                if (!mounted) return;
-                                Navigator.pop(ctx);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(ok
-                                        ? 'Password reset email sent to $email'
-                                        : 'Failed to send reset email'),
-                                    behavior: SnackBarBehavior.floating,
-                                    margin: const EdgeInsets.all(16),
-                                  ),
-                                );
-                              },
-                        child: sending
-                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Text('Send'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
+    final prefill = _emailController.text.trim();
+    await Navigator.pushNamed(context, '/forgot', arguments: {
+      'email': prefill,
+    });
   }
 
 

@@ -123,13 +123,22 @@ class _SearchScreenState extends State<SearchScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
+        scrolledUnderElevation: 0,
+        toolbarHeight: 70,
+        titleSpacing: 12,
         title: Container(
-          height: 45,
+          height: 48,
           decoration: BoxDecoration(
-            // Match theme surfaces (orange tint in light mode)
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(22.5),
-            border: Border.all(color: Colors.black54, width: 1),
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: theme.dividerColor.withOpacity(0.6)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: TextField(
             controller: _searchController,
@@ -139,11 +148,11 @@ class _SearchScreenState extends State<SearchScreen> {
                 : 'Search by name or username...',
               hintStyle: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              prefixIcon: Icon(Icons.search, color: Colors.black87, size: 22),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              prefixIcon: Icon(Icons.search, color: theme.hintColor, size: 22),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.black54, size: 20),
+                      icon: Icon(Icons.clear, color: theme.hintColor, size: 20),
                       onPressed: () {
                         _searchController.clear();
                         _performSearch('');
@@ -155,6 +164,35 @@ class _SearchScreenState extends State<SearchScreen> {
             onChanged: _performSearch,
           ),
         ),
+        bottom: (_searchController.text.isEmpty && !_isLoadingRecents && _recentUsers.isNotEmpty)
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(40),
+                child: Container(
+                  height: 40,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    children: [
+                      Text(
+                        'Recent searches',
+                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () async {
+                          final uid = context.read<AuthProvider>().currentUser?.id;
+                          if (uid == null) return;
+                          await context.read<UserProvider>().clearRecentSearches(uid);
+                          await _loadRecentUsers();
+                          setState(() {});
+                        },
+                        child: Text('Clear', style: TextStyle(color: theme.hintColor)),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : null,
       ),
       body: Consumer<UserProvider>(
         builder: (context, userProvider, child) {
@@ -233,48 +271,13 @@ class _SearchScreenState extends State<SearchScreen> {
               );
             }
 
-            final theme = Theme.of(context);
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    children: [
-                      const Text(
-                        'Recent searches',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () async {
-                          final uid = context.read<AuthProvider>().currentUser?.id;
-                          if (uid == null) return;
-                          await context.read<UserProvider>().clearRecentSearches(uid);
-                          await _loadRecentUsers();
-                        },
-                        child: Text(
-                          'Clear',
-                          style: TextStyle(color: theme.hintColor),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _recentUsers.length,
-                    itemBuilder: (context, index) {
-                      final user = _recentUsers[index];
-                      return _buildUserTile(user);
-                    },
-                  ),
-                ),
-              ],
+            return ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              itemCount: _recentUsers.length,
+              itemBuilder: (context, index) {
+                final user = _recentUsers[index];
+                return _buildUserTile(user);
+              },
             );
           }
         },
@@ -287,9 +290,16 @@ class _SearchScreenState extends State<SearchScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black, width: 1),
+        border: Border.all(color: theme.dividerColor.withOpacity(0.6), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

@@ -434,7 +434,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => _showEditProfileDialog(context),
+                    onPressed: () async {
+                      await Navigator.pushNamed(context, '/edit-profile');
+                      if (mounted) _loadUserProfile();
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,

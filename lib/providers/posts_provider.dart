@@ -290,7 +290,8 @@ class PostsProvider with ChangeNotifier {
       if (wasLiked) {
         await _postService.unlikePost(postId, userId);
       } else {
-        await _postService.likePost(postId, userId);
+        final ownerId = (originalP ?? originalG)!.userId;
+        await _postService.likePost(postId, userId, ownerId: ownerId);
       }
     } catch (e) {
       if (pIdx != -1 && originalP != null) _posts[pIdx] = originalP;

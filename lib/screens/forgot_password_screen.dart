@@ -13,6 +13,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   bool _sending = false;
+  bool _initializedFromArgs = false;
 
   @override
   void dispose() {
@@ -22,16 +23,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    FocusScope.of(context).unfocus();
     setState(() => _sending = true);
     try {
       final email = _emailController.text.trim();
       final ok = await context.read<AuthProvider>().sendPasswordReset(email);
       if (!mounted) return;
+      final lastError = context.read<AuthProvider>().lastError;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            ok ? 'Password reset email sent to $email' : 'Failed to send reset email',
-          ),
+          content: Text(ok
+              ? 'Password reset email sent to $email'
+              : (lastError != null && lastError.isNotEmpty
+                  ? lastError
+                  : 'Failed to send reset email')),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(16),
         ),
@@ -44,6 +49,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_initializedFromArgs) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Map && args['email'] is String && (args['email'] as String).isNotEmpty) {
+        _emailController.text = args['email'] as String;
+      }
+      _initializedFromArgs = true;
+    }
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: Container(
@@ -114,6 +126,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               TextFormField(
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.send,
+                                autofillHints: const [AutofillHints.email],
+                                onFieldSubmitted: (_) => _sending ? null : _submit(),
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) return 'Please enter your email';
                                   if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value)) return 'Please enter a valid email';

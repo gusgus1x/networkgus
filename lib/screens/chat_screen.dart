@@ -60,6 +60,10 @@ class _ChatScreenState extends State<ChatScreen> {
         context.read<ChatProvider>().markAsRead(widget.conversationId, auth!.uid);
       }
     });
+    // Rebuild composer when text changes to toggle + / send button
+    _messageController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -404,81 +408,95 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
           Row(
             children: [
-              IconButton(
-                icon: Icon(
-                  Icons.add,
-                  color: Theme.of(context).brightness == Brightness.light
-                      ? Colors.black87
-                      : Colors.white70,
-                ),
-                onPressed: () {
-                  _showAttachmentOptions();
-                },
-              ),
+              // Pill input with trailing action inside
               Expanded(
-                child: TextField(
-                  controller: _messageController,
-                  decoration: InputDecoration(
-                    // If either image or video is pending, show caption hint
-                    hintText: (_pendingImageBytes != null || _pendingVideoBytes != null)
-                        ? 'Add a caption...'
-                        : 'Type a message...',
-                    hintStyle: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.light
-                          ? Theme.of(context).hintColor
-                          : Colors.white54,
-                    ),
-                    filled: true,
-                    fillColor: Theme.of(context).brightness == Brightness.light
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.light
                         ? Theme.of(context).cardColor
                         : const Color(0xFF2A2A2A),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(22),
-                      borderSide: BorderSide(
-                        color: Theme.of(context).brightness == Brightness.light
-                            ? Colors.black54
-                            : const Color(0xFF333333),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(22),
-                      borderSide: BorderSide(
-                        color: Theme.of(context).brightness == Brightness.light
-                            ? Colors.black54
-                            : const Color(0xFF333333),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(22),
-                      borderSide: BorderSide(
-                        color: Theme.of(context).brightness == Brightness.light
-                            ? Colors.black
-                            : const Color(0xFF6C5CE7),
-                        width: 2,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      if (Theme.of(context).brightness == Brightness.light)
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                    ],
+                    border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.4)),
                   ),
-                  style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.light
-                        ? Colors.black
-                        : Colors.white,
-                  ),
-                  maxLines: null,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => _sendPendingOrText(),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Material(
-                color: Theme.of(context).colorScheme.primary,
-                shape: const CircleBorder(),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: _sendPendingOrText,
-                  child: const Padding(
-                    padding: EdgeInsets.all(10),
-                    child: Icon(Icons.send, color: Colors.white),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _messageController,
+                          decoration: InputDecoration.collapsed(
+                            hintText: (_pendingImageBytes != null || _pendingVideoBytes != null)
+                                ? 'Add a caption...'
+                                : 'Message...',
+                            hintStyle: TextStyle(
+                              color: Theme.of(context).brightness == Brightness.light
+                                  ? Theme.of(context).hintColor
+                                  : Colors.white54,
+                            ),
+                          ),
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.light
+                                ? Colors.black
+                                : Colors.white,
+                          ),
+                          maxLines: null,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _sendPendingOrText(),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Builder(
+                        builder: (context) {
+                          final hasContent = _messageController.text.trim().isNotEmpty ||
+                              _pendingImageBytes != null ||
+                              _pendingVideoBytes != null;
+                          final isDark = Theme.of(context).brightness == Brightness.dark;
+                          if (hasContent) {
+                            return Material(
+                              color: Theme.of(context).colorScheme.primary,
+                              shape: const CircleBorder(),
+                              child: InkWell(
+                                customBorder: const CircleBorder(),
+                                onTap: _sendPendingOrText,
+                                child: const Padding(
+                                  padding: EdgeInsets.all(10),
+                                  child: Icon(Icons.send, color: Colors.white, size: 18),
+                                ),
+                              ),
+                            );
+                          } else {
+                            return Material(
+                              color: Colors.transparent,
+                              shape: const CircleBorder(),
+                              child: InkWell(
+                                customBorder: const CircleBorder(),
+                                onTap: _showAttachmentOptions,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: isDark ? Colors.white38 : Colors.black26),
+                                  ),
+                                  padding: const EdgeInsets.all(8),
+                                  child: Icon(
+                                    Icons.add,
+                                    size: 20,
+                                    color: isDark ? Colors.white : Colors.black87,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -831,5 +849,37 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
     // Title will auto-refresh via provider
+  }
+
+}
+
+class _ChatIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  const _ChatIconButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: isDark ? Colors.white38 : Colors.black26),
+          ),
+          padding: const EdgeInsets.all(8),
+          child: Icon(
+            icon,
+            size: 20,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -214,8 +214,13 @@ class _HomeScreenState extends State<HomeScreen> {
             Text('DekSomBun', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.5)),
           ],
         ),
-        // Remove actions to avoid overflow on compact screens
-        actions: const [],
+        actions: [
+          IconButton(
+            tooltip: 'Notifications',
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => Navigator.pushNamed(context, '/notifications'),
+          ),
+        ],
       ),
       body: IndexedStack(
         index: _selectedIndex,
