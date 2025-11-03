@@ -363,7 +363,7 @@ class PostService {
         }
         if (targetOwnerId != null && targetOwnerId.isNotEmpty && targetOwnerId != userId) {
           final likerSnap = await _firestore.collection('users').doc(userId).get();
-          final senderName = (likerSnap.data() as Map<String, dynamic>?)?['displayName'] as String?;
+          final senderName = likerSnap.data()?['displayName'] as String?;
           await _firestore
               .collection('users')
               .doc(targetOwnerId)

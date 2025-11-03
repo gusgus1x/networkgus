@@ -6,6 +6,7 @@ import '../providers/auth_provider.dart';
 import 'user_profile_screen.dart';
 import 'post_detail_screen.dart';
 import 'chat_screen.dart';
+import '../widgets/user_avatar.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({Key? key}) : super(key: key);
@@ -35,7 +36,7 @@ class NotificationScreen extends StatelessWidget {
         title: const Text('Notifications'),
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: stream as Stream<QuerySnapshot<Map<String, dynamic>>>,
+        stream: stream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -66,6 +67,7 @@ class NotificationScreen extends StatelessWidget {
               return _NotificationItem(
                 type: type,
                 senderName: senderName,
+                senderId: senderId,
                 title: _titleFor(type, senderName),
                 subtitle: _subtitleFor(type),
                 whenText: createdAt != null ? _timeAgo(createdAt) : null,
@@ -187,6 +189,7 @@ class _NotificationItem extends StatelessWidget {
     required this.subtitle,
     required this.read,
     this.senderName,
+    this.senderId,
     this.whenText,
     this.onTap,
   }) : super(key: key);
@@ -195,6 +198,7 @@ class _NotificationItem extends StatelessWidget {
   final String title;
   final String subtitle;
   final String? senderName;
+  final String? senderId;
   final String? whenText;
   final bool read;
   final VoidCallback? onTap;
@@ -231,7 +235,7 @@ class _NotificationItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              NotificationScreen._iconFor(type, read, context),
+              _buildLeading(context),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -296,6 +300,19 @@ class _NotificationItem extends StatelessWidget {
     }
 
     return Text(title, style: base?.copyWith(fontWeight: read ? FontWeight.w500 : FontWeight.w700));
+  }
+
+  Widget _buildLeading(BuildContext context) {
+    // Show actor's avatar for follow/like when we have a senderId; otherwise fallback icon
+    final canShowAvatar = (type == 'follow' || type == 'like') && (senderId != null && senderId!.isNotEmpty);
+    if (!canShowAvatar) {
+      return NotificationScreen._iconFor(type, read, context);
+    }
+    return _ActorAvatar(
+      userId: senderId!,
+      displayName: senderName ?? 'User',
+      fallback: NotificationScreen._iconFor(type, read, context),
+    );
   }
 }
 
@@ -364,5 +381,47 @@ Color _typeColor(BuildContext context, String type, {bool read = true}) {
       return scheme.primary;
     default:
       return read ? (Theme.of(context).iconTheme.color ?? scheme.primary) : scheme.primary;
+  }
+}
+
+class _ActorAvatar extends StatelessWidget {
+  const _ActorAvatar({
+    required this.userId,
+    required this.displayName,
+    required this.fallback,
+  });
+
+  final String userId;
+  final String displayName;
+  final Widget fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
+      builder: (context, snap) {
+        if (snap.hasData && snap.data?.data() != null) {
+          final data = snap.data!.data()!;
+          final url = (data['profileImageUrl'] as String?);
+          return UserAvatar(
+            imageUrl: url,
+            displayName: displayName,
+            radius: 22,
+            useThemePrimary: false,
+          );
+        }
+        if (snap.connectionState == ConnectionState.waiting) {
+          // Show initials while loading; avoids layout shift
+          return UserAvatar(
+            imageUrl: null,
+            displayName: displayName,
+            radius: 22,
+            useThemePrimary: false,
+          );
+        }
+        // Fallback to existing icon badge if user doc missing
+        return fallback;
+      },
+    );
   }
 }

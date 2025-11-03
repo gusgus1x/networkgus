@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
@@ -14,7 +12,6 @@ import '../widgets/user_avatar.dart';
 import '../widgets/post_card.dart';
 import 'chat_screen.dart';
 import '../services/post_service.dart';
-import '../services/cloudinary_service.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String? userId; // Made optional - null means current user's profile
@@ -35,7 +32,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   bool _isFollowing = false;
   bool _isFollowingLoading = false;
   String? _actualUserId; // Will be set in initState
-  bool _isUploadingAvatar = false;
 
   @override
   void initState() {
@@ -560,203 +556,4 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     }
   }
 
-  void _showEditProfileDialog(BuildContext context) {
-    if (_user == null) return;
-    
-    final displayNameController = TextEditingController(text: _user!.displayName);
-    final bioController = TextEditingController(text: _user!.bio ?? '');
-
-    final theme = Theme.of(context);
-    final inputBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: theme.dividerColor),
-    );
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text('Edit Profile', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-                    ),
-                    IconButton(
-                      tooltip: 'Close',
-                      onPressed: () => Navigator.pop(dialogContext),
-                      icon: const Icon(Icons.close),
-                    )
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    UserAvatar(imageUrl: _user!.profileImageUrl, displayName: _user!.displayName, radius: 24),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _isUploadingAvatar ? null : () => _changeProfilePhoto(dialogContext),
-                        icon: _isUploadingAvatar
-                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Icon(Icons.image_outlined, size: 18),
-                        label: Text(_isUploadingAvatar ? 'Uploading...' : 'Change photo'),
-                        style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                          backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.2),
-                          foregroundColor: theme.colorScheme.onSurface,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Text('Display Name', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: displayNameController,
-                  maxLength: 50,
-                  decoration: InputDecoration(
-                    hintText: 'Display Name',
-                    counterText: '',
-                    filled: true,
-                    isDense: true,
-                    border: inputBorder,
-                    enabledBorder: inputBorder,
-                    focusedBorder: inputBorder.copyWith(
-                      borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text('Bio', style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor)),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: bioController,
-                  maxLines: 4,
-                  maxLength: 200,
-                  decoration: InputDecoration(
-                    hintText: 'Tell people about you',
-                    counterText: '',
-                    filled: true,
-                    isDense: true,
-                    border: inputBorder,
-                    enabledBorder: inputBorder,
-                    focusedBorder: inputBorder.copyWith(
-                      borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      child: const Text('Cancel'),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (_isUploadingAvatar) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please wait until photo upload finishes')),
-                          );
-                          return;
-                        }
-                        try {
-                          await context.read<AuthProvider>().updateProfile(
-                            displayName: displayNameController.text.trim(),
-                            bio: bioController.text.trim(),
-                          );
-                          Navigator.pop(dialogContext);
-                          _loadUserProfile();
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Failed to update profile: $e')),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                      ),
-                      child: const Text('Save'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _changeProfilePhoto(BuildContext dialogContext) async {
-    try {
-      setState(() => _isUploadingAvatar = true);
-
-      late final Uint8List bytes;
-      String filename = 'avatar.jpg';
-
-      if (kIsWeb) {
-        final picker = ImagePicker();
-        final x = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85, maxWidth: 1600);
-        if (x == null) return;
-        bytes = await x.readAsBytes();
-        filename = x.name;
-      } else {
-        // Use desktop file picker on desktop platforms; image_picker on mobile
-        final platform = Theme.of(context).platform;
-        final isDesktop = platform == TargetPlatform.windows || platform == TargetPlatform.linux || platform == TargetPlatform.macOS;
-        if (isDesktop) {
-          final res = await FilePicker.platform.pickFiles(type: FileType.image, allowMultiple: false, withData: true);
-          if (res == null) return;
-          final file = res.files.single;
-          if (file.bytes == null) return;
-          bytes = file.bytes!;
-          filename = file.name;
-        } else {
-          final picker = ImagePicker();
-          final x = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85, maxWidth: 1600);
-          if (x == null) return;
-          bytes = await x.readAsBytes();
-          filename = x.name;
-        }
-      }
-
-      final cloudinary = CloudinaryService(folder: 'networkgus/avatars');
-  final url = await cloudinary.uploadImageBytes(bytes, filename: filename);
-
-      await context.read<AuthProvider>().updateProfile(profileImageUrl: url);
-      if (mounted) {
-        setState(() {
-          _user = _user?.copyWith(profileImageUrl: url);
-        });
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile photo updated')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update photo: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isUploadingAvatar = false);
-    }
-  }
 }

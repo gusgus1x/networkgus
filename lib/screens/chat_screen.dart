@@ -852,34 +852,3 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
 }
-
-class _ChatIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  const _ChatIconButton({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: isDark ? Colors.white38 : Colors.black26),
-          ),
-          padding: const EdgeInsets.all(8),
-          child: Icon(
-            icon,
-            size: 20,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-      ),
-    );
-  }
-}

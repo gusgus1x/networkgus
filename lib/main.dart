@@ -19,18 +19,31 @@ import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  // Log the active Firebase project for quick verification in console
-  // Example output: Using Firebase project: deksombun-9eba1
-  // This helps confirm the app points to the intended project after reconfiguration.
-  // ignore: avoid_print
-  print('Using Firebase project: ' + DefaultFirebaseOptions.currentPlatform.projectId);
-  // Initialize notifications and provide a global navigator key for deep links
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    // ignore: avoid_print
+    print('Using Firebase project: ' + DefaultFirebaseOptions.currentPlatform.projectId);
+  } catch (e) {
+    debugPrint('Firebase init error: $e');
+  }
+
+  // Provide a global navigator key for deep links
   final navigatorKey = GlobalKey<NavigatorState>();
-  await NotificationService.instance.init(navigatorKey: navigatorKey);
+
+  // Start the app immediately to avoid blocking the first frame
   runApp(r.ProviderScope(child: MyApp(navigatorKey: navigatorKey)));
+
+  // Defer notification initialization until after the first frame to prevent
+  // white screen while waiting for permissions/plugins.
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    try {
+      await NotificationService.instance.init(navigatorKey: navigatorKey);
+    } catch (e) {
+      debugPrint('Notification init error: $e');
+    }
+  });
 }
 
 class MyApp extends StatelessWidget {
